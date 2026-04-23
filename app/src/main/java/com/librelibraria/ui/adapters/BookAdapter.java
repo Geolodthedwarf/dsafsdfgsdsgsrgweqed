@@ -4,16 +4,15 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
-import android.widget.RatingBar;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
+import com.google.android.material.chip.Chip;
 import com.librelibraria.R;
 import com.librelibraria.data.model.Book;
-import com.librelibraria.data.model.ReadingStatus;
 
 import java.util.List;
 
@@ -64,17 +63,15 @@ public class BookAdapter extends RecyclerView.Adapter<BookAdapter.BookViewHolder
         private final TextView tvTitle;
         private final TextView tvAuthor;
         private final TextView tvGenre;
-        private final TextView tvStatus;
-        private final RatingBar ratingBar;
+        private final Chip tvStatus;
 
         BookViewHolder(@NonNull View itemView) {
             super(itemView);
-            ivCover = itemView.findViewById(R.id.iv_book_cover);
-            tvTitle = itemView.findViewById(R.id.tv_book_title);
-            tvAuthor = itemView.findViewById(R.id.tv_book_author);
-            tvGenre = itemView.findViewById(R.id.tv_book_genre);
-            tvStatus = itemView.findViewById(R.id.tv_book_status);
-            ratingBar = itemView.findViewById(R.id.rating_bar);
+            ivCover = itemView.findViewById(R.id.image_cover);
+            tvTitle = itemView.findViewById(R.id.text_title);
+            tvAuthor = itemView.findViewById(R.id.text_author);
+            tvGenre = itemView.findViewById(R.id.text_genre);
+            tvStatus = itemView.findViewById(R.id.chip_status);
         }
 
         void bind(Book book, OnBookClickListener listener) {
@@ -84,19 +81,9 @@ public class BookAdapter extends RecyclerView.Adapter<BookAdapter.BookViewHolder
 
             // Set status
             if (book.isAvailable()) {
-                tvStatus.setText(itemView.getContext().getString(R.string.status_available));
-                tvStatus.setBackgroundResource(R.drawable.bg_status_available);
+                tvStatus.setText(itemView.getContext().getString(R.string.available));
             } else {
-                tvStatus.setText(itemView.getContext().getString(R.string.status_borrowed));
-                tvStatus.setBackgroundResource(R.drawable.bg_status_borrowed);
-            }
-
-            // Set rating
-            if (book.getRating() > 0) {
-                ratingBar.setVisibility(View.VISIBLE);
-                ratingBar.setRating((float) book.getRating());
-            } else {
-                ratingBar.setVisibility(View.GONE);
+                tvStatus.setText(itemView.getContext().getString(R.string.borrowed));
             }
 
             // Load cover image

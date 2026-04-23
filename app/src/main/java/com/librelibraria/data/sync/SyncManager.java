@@ -4,12 +4,11 @@ import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 
-import com.google.gson.Gson;
 import com.librelibraria.LibreLibrariaApp;
 import com.librelibraria.data.api.ApiClient;
 import com.librelibraria.data.api.ApiService;
+import com.librelibraria.data.bcl.BclCodec;
 import com.librelibraria.data.database.AppDatabase;
-import com.librelibraria.data.model.AuditLog;
 import com.librelibraria.data.model.Book;
 import com.librelibraria.data.model.Loan;
 import com.librelibraria.data.repository.SettingsRepository;
@@ -36,7 +35,7 @@ public class SyncManager {
     private final SettingsRepository settings;
     private final ExecutorService executor;
     private final CompositeDisposable disposables;
-    private final Gson gson;
+    private final BclCodec bclCodec;
 
     private SyncStatus currentStatus = SyncStatus.IDLE;
     private long lastSyncTime = 0;
@@ -64,7 +63,7 @@ public class SyncManager {
         this.settings = settings;
         this.executor = Executors.newSingleThreadExecutor();
         this.disposables = new CompositeDisposable();
-        this.gson = new Gson();
+        this.bclCodec = new BclCodec(database, settings);
         this.lastSyncTime = settings.getLastSyncTime();
     }
 
@@ -207,40 +206,11 @@ public class SyncManager {
     }
 
     public Single<String> exportLibrary() {
-        return Single.fromCallable(() -> {
-            StringBuilder json = new StringBuilder();
-            json.append("{\n");
-
-            // Export books
-            List<Book> books = database.bookDao().getUnsyncedBooks().blockingGet();
-            json.append("\"books\":").append(gson.toJson(books)).append(",\n");
-
-            // Export loans
-            List<Loan> loans = database.loanDao().getUnsyncedLoans().blockingGet();
-            json.append("\"loans\":").append(gson.toJson(loans)).append(",\n");
-
-            json.append("\"exportDate\":\"").append(System.currentTimeMillis()).append("\"\n");
-            json.append("}");
-
-            return json.toString();
-        }).subscribeOn(Schedulers.io());
+        return bclCodec.exportBcl();
     }
 
     public Single<Integer> importLibrary(String jsonData) {
-        return Single.fromCallable(() -> {
-            int imported = 0;
-
-            try {
-                // Parse and import books
-                // Implementation would parse JSON and insert into database
-                // This is a simplified version
-                imported = 0;
-            } catch (Exception e) {
-                throw new RuntimeException("Import failed: " + e.getMessage());
-            }
-
-            return imported;
-        }).subscribeOn(Schedulers.io());
+        return bclCodec.importBcl(jsonData);
     }
 
     private boolean isNetworkAvailable() {

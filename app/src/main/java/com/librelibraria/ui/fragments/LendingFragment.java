@@ -17,7 +17,6 @@ import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
@@ -39,10 +38,7 @@ import java.util.List;
  */
 public class LendingFragment extends Fragment implements LoanAdapter.OnLoanClickListener {
 
-    private SwipeRefreshLayout swipeRefresh;
     private RecyclerView rvLoans;
-    private TextView tvActiveCount;
-    private TextView tvOverdueCount;
     private View emptyView;
 
     private LoanAdapter loanAdapter;
@@ -66,11 +62,8 @@ public class LendingFragment extends Fragment implements LoanAdapter.OnLoanClick
     }
 
     private void initViews(View view) {
-        swipeRefresh = view.findViewById(R.id.swipe_refresh);
-        rvLoans = view.findViewById(R.id.rv_loans);
-        tvActiveCount = view.findViewById(R.id.tv_active_count);
-        tvOverdueCount = view.findViewById(R.id.tv_overdue_count);
-        emptyView = view.findViewById(R.id.empty_view);
+        rvLoans = view.findViewById(R.id.recycler_loans);
+        emptyView = view.findViewById(R.id.layout_empty);
     }
 
     private void setupRecyclerView() {
@@ -92,23 +85,13 @@ public class LendingFragment extends Fragment implements LoanAdapter.OnLoanClick
             }
         });
 
-        viewModel.getActiveLoansCount().observe(getViewLifecycleOwner(), count -> {
-            tvActiveCount.setText(String.valueOf(count));
-        });
-
-        viewModel.getOverdueLoansCount().observe(getViewLifecycleOwner(), count -> {
-            tvOverdueCount.setText(String.valueOf(count));
-        });
-
-        viewModel.getIsLoading().observe(getViewLifecycleOwner(), isLoading -> {
-            swipeRefresh.setRefreshing(isLoading);
-        });
+        viewModel.getActiveLoansCount().observe(getViewLifecycleOwner(), count -> {});
+        viewModel.getOverdueLoansCount().observe(getViewLifecycleOwner(), count -> {});
+        viewModel.getIsLoading().observe(getViewLifecycleOwner(), isLoading -> {});
     }
 
     private void setupListeners() {
-        swipeRefresh.setOnRefreshListener(() -> viewModel.refresh());
-
-        FloatingActionButton fab = getView().findViewById(R.id.fab_lend_book);
+        FloatingActionButton fab = getView().findViewById(R.id.fab_new_loan);
         if (fab != null) {
             fab.setOnClickListener(v -> showLendBookDialog());
         }

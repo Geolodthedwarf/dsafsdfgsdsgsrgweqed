@@ -66,7 +66,7 @@ public interface LoanDao {
     Single<Integer> getActiveLoansCount();
 
     @Query("SELECT COUNT(*) FROM loans WHERE status = 'ACTIVE' AND dueDate < :currentTime")
-    Single<Integer> getOverdueLoansCount();
+    Single<Integer> getOverdueLoansCount(long currentTime);
 
     @Query("UPDATE loans SET status = :status, returnDate = :returnDate, lateFee = :lateFee WHERE id = :loanId")
     Completable returnBook(long loanId, LoanStatus status, long returnDate, double lateFee);

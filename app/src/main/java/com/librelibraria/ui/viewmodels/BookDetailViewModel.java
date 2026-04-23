@@ -13,6 +13,8 @@ import com.librelibraria.data.model.Loan;
 import com.librelibraria.data.model.LoanStatus;
 import com.librelibraria.data.repository.BookRepository;
 import com.librelibraria.data.repository.LoanRepository;
+import com.librelibraria.data.service.LendingService;
+import com.librelibraria.data.service.RatingService;
 
 import java.util.List;
 
@@ -27,6 +29,8 @@ public class BookDetailViewModel extends AndroidViewModel {
 
     private final BookRepository bookRepository;
     private final LoanRepository loanRepository;
+    private final RatingService ratingService;
+    private final LendingService lendingService;
     private final CompositeDisposable disposables;
 
     private final MutableLiveData<Book> book = new MutableLiveData<>();
@@ -42,6 +46,8 @@ public class BookDetailViewModel extends AndroidViewModel {
         LibreLibrariaApp app = (LibreLibrariaApp) application;
         bookRepository = app.getBookRepository();
         loanRepository = app.getLoanRepository();
+        ratingService = app.getRatingService();
+        lendingService = app.getLendingService();
         disposables = new CompositeDisposable();
     }
 
@@ -136,7 +142,7 @@ public class BookDetailViewModel extends AndroidViewModel {
         if (currentBook == null) return;
 
         disposables.add(
-            bookRepository.updateBookRating(currentBook.getId(), rating, review)
+            ratingService.saveRating(currentBook.getId(), rating, review, false)
                 .andThen(bookRepository.getBookById(currentBook.getId()))
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
@@ -158,11 +164,12 @@ public class BookDetailViewModel extends AndroidViewModel {
         if (currentBook == null) return;
 
         disposables.add(
-            loanRepository.returnBook(loan.getId(), loan.calculateLateFee())
-                .andThen(bookRepository.updateBook(currentBook, b -> {
-                    b.setAvailableCopies(b.getAvailableCopies() + 1);
-                    return bookRepository.updateBook(b);
-                }).ignoreElement())
+            lendingService.returnBook(loan.getId())
+                .andThen(bookRepository.getBookById(currentBook.getId()))
+                .flatMapCompletable(bookToUpdate -> {
+                    // LendingService already updates availability; only refresh local view model state.
+                    return io.reactivex.rxjava3.core.Completable.complete();
+                })
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(

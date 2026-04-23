@@ -11,6 +11,7 @@ import com.librelibraria.LibreLibrariaApp;
 import com.librelibraria.data.model.Book;
 import com.librelibraria.data.model.Tag;
 import com.librelibraria.data.repository.BookRepository;
+import com.librelibraria.data.service.CatalogService;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,6 +26,7 @@ import io.reactivex.rxjava3.schedulers.Schedulers;
 public class AddEditBookViewModel extends AndroidViewModel {
 
     private final BookRepository bookRepository;
+    private final CatalogService catalogService;
     private final CompositeDisposable disposables;
 
     private final MutableLiveData<Book> book = new MutableLiveData<>();
@@ -38,6 +40,7 @@ public class AddEditBookViewModel extends AndroidViewModel {
 
         LibreLibrariaApp app = (LibreLibrariaApp) application;
         bookRepository = app.getBookRepository();
+        catalogService = app.getCatalogService();
         disposables = new CompositeDisposable();
     }
 
@@ -108,7 +111,7 @@ public class AddEditBookViewModel extends AndroidViewModel {
         isLoading.setValue(true);
 
         disposables.add(
-            bookRepository.insertBook(newBook)
+            catalogService.saveBook(newBook, false)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(
@@ -128,7 +131,7 @@ public class AddEditBookViewModel extends AndroidViewModel {
         isLoading.setValue(true);
 
         disposables.add(
-            bookRepository.updateBook(updatedBook)
+            catalogService.saveBook(updatedBook, true)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(

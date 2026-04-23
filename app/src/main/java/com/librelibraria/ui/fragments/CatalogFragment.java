@@ -17,7 +17,6 @@ import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.librelibraria.R;
@@ -34,10 +33,8 @@ import java.util.ArrayList;
  */
 public class CatalogFragment extends Fragment implements BookAdapter.OnBookClickListener {
 
-    private SwipeRefreshLayout swipeRefresh;
     private RecyclerView rvBooks;
     private EditText etSearch;
-    private AutoCompleteTextView actvGenreFilter;
     private View emptyView;
 
     private BookAdapter bookAdapter;
@@ -61,11 +58,9 @@ public class CatalogFragment extends Fragment implements BookAdapter.OnBookClick
     }
 
     private void initViews(View view) {
-        swipeRefresh = view.findViewById(R.id.swipe_refresh);
-        rvBooks = view.findViewById(R.id.rv_books);
-        etSearch = view.findViewById(R.id.et_search);
-        actvGenreFilter = view.findViewById(R.id.actv_genre_filter);
-        emptyView = view.findViewById(R.id.empty_view);
+        rvBooks = view.findViewById(R.id.recycler_books);
+        etSearch = view.findViewById(R.id.edit_search);
+        emptyView = view.findViewById(R.id.layout_empty);
     }
 
     private void setupRecyclerView() {
@@ -94,18 +89,13 @@ public class CatalogFragment extends Fragment implements BookAdapter.OnBookClick
                         android.R.layout.simple_dropdown_item_1line,
                         genres
                 );
-                actvGenreFilter.setAdapter(adapter);
             }
         });
 
-        viewModel.getIsLoading().observe(getViewLifecycleOwner(), isLoading -> {
-            swipeRefresh.setRefreshing(isLoading);
-        });
+        viewModel.getIsLoading().observe(getViewLifecycleOwner(), isLoading -> {});
     }
 
     private void setupListeners() {
-        swipeRefresh.setOnRefreshListener(() -> viewModel.refresh());
-
         etSearch.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
@@ -117,11 +107,6 @@ public class CatalogFragment extends Fragment implements BookAdapter.OnBookClick
 
             @Override
             public void afterTextChanged(Editable s) {}
-        });
-
-        actvGenreFilter.setOnItemClickListener((parent, view, position, id) -> {
-            String genre = (String) parent.getItemAtPosition(position);
-            viewModel.filterByGenre(genre);
         });
 
         FloatingActionButton fab = getView().findViewById(R.id.fab_add_book);

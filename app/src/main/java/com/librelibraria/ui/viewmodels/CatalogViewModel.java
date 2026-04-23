@@ -6,10 +6,10 @@ import androidx.annotation.NonNull;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
-import androidx.lifecycle.Transformations;
 
 import com.librelibraria.LibreLibrariaApp;
 import com.librelibraria.data.model.Book;
+import com.librelibraria.data.service.CatalogService;
 import com.librelibraria.data.repository.BookRepository;
 
 import java.util.ArrayList;
@@ -25,9 +25,11 @@ import io.reactivex.rxjava3.schedulers.Schedulers;
 public class CatalogViewModel extends AndroidViewModel {
 
     private final BookRepository bookRepository;
+    private final CatalogService catalogService;
     private final CompositeDisposable disposables;
 
     private final MutableLiveData<List<Book>> allBooks = new MutableLiveData<>(new ArrayList<>());
+    private final MutableLiveData<List<Book>> filteredBooks = new MutableLiveData<>(new ArrayList<>());
     private final MutableLiveData<List<String>> genres = new MutableLiveData<>(new ArrayList<>());
     private final MutableLiveData<Boolean> isLoading = new MutableLiveData<>(false);
 
@@ -39,6 +41,7 @@ public class CatalogViewModel extends AndroidViewModel {
 
         LibreLibrariaApp app = (LibreLibrariaApp) application;
         bookRepository = app.getBookRepository();
+        catalogService = app.getCatalogService();
         disposables = new CompositeDisposable();
 
         loadBooks();
@@ -46,7 +49,7 @@ public class CatalogViewModel extends AndroidViewModel {
     }
 
     public LiveData<List<Book>> getBooks() {
-        return allBooks;
+        return filteredBooks;
     }
 
     public LiveData<List<String>> getGenres() {
@@ -83,6 +86,7 @@ public class CatalogViewModel extends AndroidViewModel {
                 .subscribe(
                     books -> {
                         allBooks.setValue(books);
+                        filteredBooks.setValue(books);
                         isLoading.setValue(false);
                         applyFilters();
                     },
@@ -106,29 +110,15 @@ public class CatalogViewModel extends AndroidViewModel {
     }
 
     private void applyFilters() {
-        List<Book> filtered = new ArrayList<>();
-        List<Book> source = allBooks.getValue();
-
-        if (source == null) {
-            allBooks.setValue(new ArrayList<>());
-            return;
-        }
-
-        for (Book book : source) {
-            boolean matchesSearch = currentSearchQuery.isEmpty() ||
-                    book.getTitle().toLowerCase().contains(currentSearchQuery.toLowerCase()) ||
-                    (book.getAuthor() != null && book.getAuthor().toLowerCase().contains(currentSearchQuery.toLowerCase())) ||
-                    (book.getIsbn() != null && book.getIsbn().contains(currentSearchQuery));
-
-            boolean matchesGenre = currentGenreFilter.isEmpty() ||
-                    (book.getGenre() != null && book.getGenre().equalsIgnoreCase(currentGenreFilter));
-
-            if (matchesSearch && matchesGenre) {
-                filtered.add(book);
-            }
-        }
-
-        allBooks.setValue(filtered);
+        disposables.add(
+                catalogService.loadCatalog(currentSearchQuery, currentGenreFilter, 1, 1000)
+                        .subscribeOn(Schedulers.io())
+                        .observeOn(AndroidSchedulers.mainThread())
+                        .subscribe(
+                                filteredBooks::setValue,
+                                error -> filteredBooks.setValue(new ArrayList<>())
+                        )
+        );
     }
 
     @Override

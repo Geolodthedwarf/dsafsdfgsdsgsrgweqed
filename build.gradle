@@ -12,6 +12,7 @@ buildscript {
         material_version = '1.11.0'
         mpchart_version = '3.1.0'
         nanohhttpd_version = '2.3.1'
+        preference_version = '1.2.1'
     }
     repositories {
         google()

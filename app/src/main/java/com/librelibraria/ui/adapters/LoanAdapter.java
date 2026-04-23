@@ -8,6 +8,7 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.material.chip.Chip;
 import com.librelibraria.R;
 import com.librelibraria.data.model.Loan;
 
@@ -63,16 +64,14 @@ public class LoanAdapter extends RecyclerView.Adapter<LoanAdapter.LoanViewHolder
         private final TextView tvBookTitle;
         private final TextView tvBorrower;
         private final TextView tvDueDate;
-        private final TextView tvStatus;
-        private final View statusIndicator;
+        private final Chip tvStatus;
 
         LoanViewHolder(@NonNull View itemView) {
             super(itemView);
-            tvBookTitle = itemView.findViewById(R.id.tv_book_title);
-            tvBorrower = itemView.findViewById(R.id.tv_borrower);
-            tvDueDate = itemView.findViewById(R.id.tv_due_date);
-            tvStatus = itemView.findViewById(R.id.tv_status);
-            statusIndicator = itemView.findViewById(R.id.status_indicator);
+            tvBookTitle = itemView.findViewById(R.id.text_book_title);
+            tvBorrower = itemView.findViewById(R.id.text_borrower);
+            tvDueDate = itemView.findViewById(R.id.text_due_date);
+            tvStatus = itemView.findViewById(R.id.chip_status);
         }
 
         void bind(Loan loan, OnLoanClickListener listener, SimpleDateFormat dateFormat) {
@@ -81,13 +80,9 @@ public class LoanAdapter extends RecyclerView.Adapter<LoanAdapter.LoanViewHolder
             tvDueDate.setText(dateFormat.format(new Date(loan.getDueDate())));
 
             if (loan.isOverdue()) {
-                tvStatus.setText(itemView.getContext().getString(R.string.status_overdue));
-                tvStatus.setTextColor(itemView.getContext().getColor(R.color.status_overdue));
-                statusIndicator.setBackgroundColor(itemView.getContext().getColor(R.color.status_overdue));
+                tvStatus.setText(itemView.getContext().getString(R.string.overdue));
             } else {
-                tvStatus.setText(itemView.getContext().getString(R.string.status_active));
-                tvStatus.setTextColor(itemView.getContext().getColor(R.color.status_borrowed));
-                statusIndicator.setBackgroundColor(itemView.getContext().getColor(R.color.status_borrowed));
+                tvStatus.setText(itemView.getContext().getString(R.string.active_loans));
             }
 
             itemView.setOnClickListener(v -> {

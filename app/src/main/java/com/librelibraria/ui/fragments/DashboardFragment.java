@@ -5,6 +5,9 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ProgressBar;
+import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -12,7 +15,6 @@ import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.librelibraria.R;
@@ -30,13 +32,9 @@ import java.util.List;
  */
 public class DashboardFragment extends Fragment implements BookAdapter.OnBookClickListener {
 
-    private SwipeRefreshLayout swipeRefresh;
-    private View statsContainer;
-    private View recentBooksContainer;
-
     private TextView tvTotalBooks;
-    private TextView tvAvailableBooks;
-    private TextView tvBorrowedBooks;
+    private TextView tvActiveLoans;
+    private TextView tvTotalBorrowers;
     private TextView tvOverdueBooks;
 
     private RecyclerView rvRecentBooks;
@@ -62,16 +60,11 @@ public class DashboardFragment extends Fragment implements BookAdapter.OnBookCli
     }
 
     private void initViews(View view) {
-        swipeRefresh = view.findViewById(R.id.swipe_refresh);
-        statsContainer = view.findViewById(R.id.stats_container);
-        recentBooksContainer = view.findViewById(R.id.recent_books_container);
-
-        tvTotalBooks = view.findViewById(R.id.tv_total_books);
-        tvAvailableBooks = view.findViewById(R.id.tv_available_books);
-        tvBorrowedBooks = view.findViewById(R.id.tv_borrowed_books);
-        tvOverdueBooks = view.findViewById(R.id.tv_overdue_books);
-
-        rvRecentBooks = view.findViewById(R.id.rv_recent_books);
+        tvTotalBooks = view.findViewById(R.id.text_total_books);
+        tvActiveLoans = view.findViewById(R.id.text_active_loans);
+        tvTotalBorrowers = view.findViewById(R.id.text_total_borrowers);
+        tvOverdueBooks = view.findViewById(R.id.text_overdue);
+        rvRecentBooks = view.findViewById(R.id.recycler_recent_activity);
     }
 
     private void setupRecyclerView() {
@@ -88,8 +81,8 @@ public class DashboardFragment extends Fragment implements BookAdapter.OnBookCli
         viewModel.getStatistics().observe(getViewLifecycleOwner(), stats -> {
             if (stats != null) {
                 tvTotalBooks.setText(String.valueOf(stats.getTotalBooks()));
-                tvAvailableBooks.setText(String.valueOf(stats.getAvailableBooks()));
-                tvBorrowedBooks.setText(String.valueOf(stats.getBorrowedBooks()));
+                tvActiveLoans.setText(String.valueOf(stats.getBorrowedBooks()));
+                tvTotalBorrowers.setText(String.valueOf(stats.getAvailableBooks()));
                 tvOverdueBooks.setText(String.valueOf(stats.getOverdueBooks()));
             }
         });
@@ -97,20 +90,13 @@ public class DashboardFragment extends Fragment implements BookAdapter.OnBookCli
         viewModel.getRecentBooks().observe(getViewLifecycleOwner(), books -> {
             if (books != null) {
                 recentBooksAdapter.updateBooks(books);
-                recentBooksContainer.setVisibility(books.isEmpty() ? View.GONE : View.VISIBLE);
             }
         });
 
-        viewModel.getIsLoading().observe(getViewLifecycleOwner(), isLoading -> {
-            swipeRefresh.setRefreshing(isLoading);
-        });
+        viewModel.getIsLoading().observe(getViewLifecycleOwner(), isLoading -> {});
     }
 
     private void setupListeners() {
-        swipeRefresh.setOnRefreshListener(() -> {
-            viewModel.refresh();
-        });
-
         FloatingActionButton fabAdd = getView().findViewById(R.id.fab_add_book);
         if (fabAdd != null) {
             fabAdd.setOnClickListener(v -> {

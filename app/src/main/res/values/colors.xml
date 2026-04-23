@@ -40,6 +40,7 @@
     <!-- Book Status Colors -->
     <color name="status_available">#4CAF50</color>
     <color name="status_on_loan">#FF9800</color>
+    <color name="status_borrowed">#FF9800</color>
     <color name="status_overdue">#F44336</color>
     <color name="status_lost">#9E9E9E</color>
     <color name="status_reserved">#2196F3</color>

@@ -13,6 +13,7 @@ import com.librelibraria.data.model.Borrower;
 import com.librelibraria.data.model.Loan;
 import com.librelibraria.data.repository.BookRepository;
 import com.librelibraria.data.repository.LoanRepository;
+import com.librelibraria.data.service.LendingService;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -28,6 +29,7 @@ public class LendingViewModel extends AndroidViewModel {
 
     private final BookRepository bookRepository;
     private final LoanRepository loanRepository;
+    private final LendingService lendingService;
     private final CompositeDisposable disposables;
 
     private final MutableLiveData<List<Loan>> activeLoans = new MutableLiveData<>(new ArrayList<>());
@@ -43,6 +45,7 @@ public class LendingViewModel extends AndroidViewModel {
         LibreLibrariaApp app = (LibreLibrariaApp) application;
         bookRepository = app.getBookRepository();
         loanRepository = app.getLoanRepository();
+        lendingService = app.getLendingService();
         disposables = new CompositeDisposable();
 
         loadData();
@@ -140,29 +143,8 @@ public class LendingViewModel extends AndroidViewModel {
     }
 
     public void lendBook(long bookId, Long borrowerId, String borrowerName, long dueDate) {
-        Loan loan = new Loan();
-        loan.setBookId(bookId);
-        loan.setBorrowerId(borrowerId);
-        loan.setBorrowerName(borrowerName);
-        loan.setDueDate(dueDate);
-        loan.setStatus(com.librelibraria.data.model.LoanStatus.ACTIVE);
-
         disposables.add(
-            loanRepository.createLoan(loan)
-                .flatMapCompletable(loanId -> {
-                    // Update available copies
-                    return bookRepository.updateBook(bookId, b -> {
-                        b.setAvailableCopies(b.getAvailableCopies() - 1);
-                        return bookRepository.updateBook(b);
-                    }).ignoreElement();
-                })
-                .flatMapCompletable(v -> {
-                    // Increment borrower count if exists
-                    if (borrowerId != null) {
-                        return loanRepository.incrementBorrowerCount(borrowerId);
-                    }
-                    return io.reactivex.rxjava3.core.Completable.complete();
-                })
+            lendingService.lendBook(bookId, borrowerId, borrowerName, dueDate)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(
@@ -174,17 +156,7 @@ public class LendingViewModel extends AndroidViewModel {
 
     public void returnBook(long loanId, String condition) {
         disposables.add(
-            loanRepository.getLoanById(loanId)
-                .flatMapCompletable(loan -> {
-                    double lateFee = loan.calculateLateFee();
-
-                    // Update loan status
-                    return loanRepository.returnBook(loanId, lateFee)
-                            .andThen(bookRepository.updateBook(loan.getBookId(), book -> {
-                                book.setAvailableCopies(book.getAvailableCopies() + 1);
-                                return bookRepository.updateBook(book);
-                            }).ignoreElement());
-                })
+            lendingService.returnBook(loanId)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(

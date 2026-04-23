@@ -43,7 +43,6 @@ public class MainActivity extends AppCompatActivity implements NavigationBarView
 
     private void setupNavigation() {
         bottomNavigation.setOnItemSelectedListener(this);
-        bottomNavigation.setLabelVisibilityMode(androidx.navigation.BottomNavigationView.LABEL_VISIBILITY_LABELED);
     }
 
     @Override
@@ -59,7 +58,7 @@ public class MainActivity extends AppCompatActivity implements NavigationBarView
         } else if (itemId == R.id.nav_lending) {
             loadFragment(new LendingFragment());
             return true;
-        } else if (itemId == R.id.nav_more) {
+        } else if (itemId == R.id.nav_borrowers) {
             loadFragment(new MoreFragment());
             return true;
         }

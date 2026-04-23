@@ -14,6 +14,7 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.activity.result.ActivityResultLauncher;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.lifecycle.ViewModelProvider;
@@ -23,7 +24,6 @@ import com.google.android.material.chip.ChipGroup;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
-import com.journeyapps.barcodescanner.ScanContract;
 import com.journeyapps.barcodescanner.ScanOptions;
 import com.librelibraria.R;
 import com.librelibraria.data.model.Book;
@@ -64,7 +64,13 @@ public class AddEditBookActivity extends AppCompatActivity {
     private List<String> selectedTags = new ArrayList<>();
     private String selectedStatus = ReadingStatus.OWN.name();
 
-    private final ScanContract scanLauncher = new ScanContract();
+    private final ActivityResultLauncher<ScanOptions> scanLauncher =
+            registerForActivityResult(new com.journeyapps.barcodescanner.ScanContract(), result -> {
+                if (result != null && result.getContents() != null) {
+                    etIsbn.setText(result.getContents());
+                    viewModel.lookupIsbn(result.getContents());
+                }
+            });
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -232,19 +238,6 @@ public class AddEditBookActivity extends AppCompatActivity {
         options.setOrientationLocked(false);
 
         scanLauncher.launch(options);
-    }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (resultCode == Activity.RESULT_OK && data != null) {
-            String barcode = data.getStringExtra("SCAN_RESULT");
-            if (barcode != null) {
-                etIsbn.setText(barcode);
-                // Optionally trigger ISBN lookup
-                viewModel.lookupIsbn(barcode);
-            }
-        }
     }
 
     private void saveBook() {

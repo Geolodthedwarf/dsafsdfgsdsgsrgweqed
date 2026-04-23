@@ -60,6 +60,30 @@
             android:theme="@style/Theme.LibreLibraria"
             android:windowSoftInputMode="adjustResize" />
 
+        <!-- Diary Activity -->
+        <activity
+            android:name=".ui.activities.DiaryActivity"
+            android:parentActivityName=".ui.activities.MainActivity"
+            android:theme="@style/Theme.LibreLibraria" />
+
+        <!-- Settings Activity -->
+        <activity
+            android:name=".ui.activities.SettingsActivity"
+            android:parentActivityName=".ui.activities.MainActivity"
+            android:theme="@style/Theme.LibreLibraria" />
+
+        <!-- Statistics Activity -->
+        <activity
+            android:name=".ui.activities.StatisticsActivity"
+            android:parentActivityName=".ui.activities.MainActivity"
+            android:theme="@style/Theme.LibreLibraria" />
+
+        <!-- Tags Activity -->
+        <activity
+            android:name=".ui.activities.TagsActivity"
+            android:parentActivityName=".ui.activities.MainActivity"
+            android:theme="@style/Theme.LibreLibraria" />
+
         <!-- Barcode Scanner Activity -->
         <activity
             android:name="com.journeyapps.barcodescanner.CaptureActivity"

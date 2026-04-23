@@ -7,9 +7,11 @@ import androidx.room.Database;
 import androidx.room.Room;
 import androidx.room.RoomDatabase;
 import androidx.room.TypeConverters;
+import androidx.room.migration.Migration;
 import androidx.sqlite.db.SupportSQLiteDatabase;
 
 import com.librelibraria.data.model.AuditLog;
+import com.librelibraria.data.model.AppSetting;
 import com.librelibraria.data.model.Book;
 import com.librelibraria.data.model.Borrower;
 import com.librelibraria.data.model.DiaryEntry;
@@ -28,9 +30,10 @@ import java.util.concurrent.Executors;
         Loan.class,
         Tag.class,
         DiaryEntry.class,
-        AuditLog.class
+        AuditLog.class,
+        AppSetting.class
     },
-    version = 1,
+    version = 2,
     exportSchema = true
 )
 @TypeConverters(Converters.class)
@@ -45,6 +48,18 @@ public abstract class AppDatabase extends RoomDatabase {
     public abstract TagDao tagDao();
     public abstract DiaryDao diaryDao();
     public abstract AuditLogDao auditLogDao();
+    public abstract AppSettingDao appSettingDao();
+
+    private static final Migration MIGRATION_1_2 = new Migration(1, 2) {
+        @Override
+        public void migrate(@NonNull SupportSQLiteDatabase database) {
+            database.execSQL("CREATE TABLE IF NOT EXISTS `app_settings` (" +
+                    "`key` TEXT NOT NULL, " +
+                    "`value` TEXT, " +
+                    "`updatedAt` INTEGER NOT NULL, " +
+                    "PRIMARY KEY(`key`))");
+        }
+    };
 
     public static AppDatabase getInstance(Context context) {
         if (INSTANCE == null) {
@@ -65,6 +80,7 @@ public abstract class AppDatabase extends RoomDatabase {
                                 });
                             }
                         })
+                        .addMigrations(MIGRATION_1_2)
                         .fallbackToDestructiveMigration()
                         .build();
                 }
@@ -87,7 +103,5 @@ public abstract class AppDatabase extends RoomDatabase {
         }
     }
 
-    public void clearAllTables() {
-        clearAllTables();
-    }
+    // Keep the inherited Room clearAllTables implementation.
 }

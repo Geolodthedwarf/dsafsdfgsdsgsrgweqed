@@ -38,14 +38,12 @@ public class LoanRepository {
         loan.setLastModified(System.currentTimeMillis());
         loan.setSynced(false);
         return loanDao.update(loan)
-                .subscribeOn(Schedulers.io())
-                .ignoreElement();
+                .subscribeOn(Schedulers.io());
     }
 
     public Completable returnBook(long loanId, double lateFee) {
         return loanDao.returnBook(loanId, LoanStatus.RETURNED, System.currentTimeMillis(), lateFee)
-                .subscribeOn(Schedulers.io())
-                .ignoreElement();
+                .subscribeOn(Schedulers.io());
     }
 
     public Single<Loan> getLoanById(long id) {
@@ -95,14 +93,12 @@ public class LoanRepository {
         borrower.setLastModified(System.currentTimeMillis());
         borrower.setSynced(false);
         return borrowerDao.update(borrower)
-                .subscribeOn(Schedulers.io())
-                .ignoreElement();
+                .subscribeOn(Schedulers.io());
     }
 
     public Completable deleteBorrower(Borrower borrower) {
         return borrowerDao.delete(borrower)
-                .subscribeOn(Schedulers.io())
-                .ignoreElement();
+                .subscribeOn(Schedulers.io());
     }
 
     public Single<Borrower> getBorrowerById(long id) {
@@ -127,7 +123,6 @@ public class LoanRepository {
 
     public Completable incrementBorrowerCount(long borrowerId) {
         return borrowerDao.incrementBorrowed(borrowerId, System.currentTimeMillis())
-                .subscribeOn(Schedulers.io())
-                .ignoreElement();
+                .subscribeOn(Schedulers.io());
     }
 }

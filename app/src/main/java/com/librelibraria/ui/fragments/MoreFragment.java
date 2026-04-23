@@ -2,6 +2,7 @@ package com.librelibraria.ui.fragments;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.widget.EditText;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -11,16 +12,22 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
+import com.librelibraria.LibreLibrariaApp;
 import com.librelibraria.R;
+import com.librelibraria.data.service.AutomationService;
+import com.librelibraria.service.LocalServerService;
 import com.librelibraria.ui.activities.DiaryActivity;
 import com.librelibraria.ui.activities.SettingsActivity;
 import com.librelibraria.ui.activities.StatisticsActivity;
 import com.librelibraria.ui.activities.TagsActivity;
+import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
+import io.reactivex.rxjava3.disposables.CompositeDisposable;
 
 /**
  * Fragment for additional features (statistics, diary, tags, settings).
  */
 public class MoreFragment extends Fragment {
+    private final CompositeDisposable disposables = new CompositeDisposable();
 
     private LinearLayout llStatistics;
     private LinearLayout llDiary;
@@ -81,18 +88,25 @@ public class MoreFragment extends Fragment {
     }
 
     private void showImportExportDialog() {
+        LibreLibrariaApp app = (LibreLibrariaApp) requireActivity().getApplication();
         new com.google.android.material.dialog.MaterialAlertDialogBuilder(requireContext())
                 .setTitle(R.string.import_export)
                 .setItems(new String[]{
                         getString(R.string.export_library),
-                        getString(R.string.import_library)
+                        getString(R.string.import_library),
+                        "Refresh inventory status"
                 }, (dialog, which) -> {
                     if (which == 0) {
-                        // Export
                         exportLibrary();
-                    } else {
-                        // Import
+                    } else if (which == 1) {
                         importLibrary();
+                    } else {
+                        disposables.add(app.getAutomationService().refreshInventoryStatus()
+                                .observeOn(AndroidSchedulers.mainThread())
+                                .subscribe(
+                                        () -> {},
+                                        error -> {}
+                                ));
                     }
                 })
                 .show();
@@ -113,18 +127,54 @@ public class MoreFragment extends Fragment {
     }
 
     private void exportLibrary() {
-        // TODO: Implement export functionality
+        LibreLibrariaApp app = (LibreLibrariaApp) requireActivity().getApplication();
+        disposables.add(app.getSyncManager().exportLibrary()
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(
+                        payload -> new com.google.android.material.dialog.MaterialAlertDialogBuilder(requireContext())
+                                .setTitle(R.string.export_library)
+                                .setMessage(payload.length() > 1200 ? payload.substring(0, 1200) + "..." : payload)
+                                .setPositiveButton(R.string.ok, null)
+                                .show(),
+                        error -> {}
+                ));
     }
 
     private void importLibrary() {
-        // TODO: Implement import functionality
+        EditText input = new EditText(requireContext());
+        input.setHint(getString(R.string.bcl_json_payload));
+        input.setMinLines(6);
+        new com.google.android.material.dialog.MaterialAlertDialogBuilder(requireContext())
+                .setTitle(R.string.import_library)
+                .setView(input)
+                .setPositiveButton(R.string.import_library, (d, w) -> {
+                    LibreLibrariaApp app = (LibreLibrariaApp) requireActivity().getApplication();
+                    disposables.add(app.getSyncManager().importLibrary(input.getText() == null ? "" : input.getText().toString())
+                            .observeOn(AndroidSchedulers.mainThread())
+                            .subscribe(
+                                    count -> {},
+                                    error -> {}
+                            ));
+                })
+                .setNegativeButton(R.string.cancel, null)
+                .show();
     }
 
     private void startServerMode() {
-        // TODO: Start local server service
+        Intent intent = new Intent(requireContext(), LocalServerService.class);
+        intent.setAction(LocalServerService.ACTION_START);
+        requireContext().startService(intent);
     }
 
     private void stopServerMode() {
-        // TODO: Stop local server service
+        Intent intent = new Intent(requireContext(), LocalServerService.class);
+        intent.setAction(LocalServerService.ACTION_STOP);
+        requireContext().startService(intent);
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        disposables.clear();
     }
 }

@@ -12,6 +12,7 @@ import com.librelibraria.data.model.Book;
 import com.librelibraria.data.model.Statistics;
 import com.librelibraria.data.repository.BookRepository;
 import com.librelibraria.data.repository.LoanRepository;
+import com.librelibraria.data.service.StatsService;
 
 import java.util.List;
 
@@ -25,7 +26,7 @@ import io.reactivex.rxjava3.schedulers.Schedulers;
 public class DashboardViewModel extends AndroidViewModel {
 
     private final BookRepository bookRepository;
-    private final LoanRepository loanRepository;
+    private final StatsService statsService;
     private final CompositeDisposable disposables;
 
     private final MutableLiveData<Statistics> statistics = new MutableLiveData<>();
@@ -37,7 +38,7 @@ public class DashboardViewModel extends AndroidViewModel {
 
         LibreLibrariaApp app = (LibreLibrariaApp) application;
         bookRepository = app.getBookRepository();
-        loanRepository = app.getLoanRepository();
+        statsService = app.getStatsService();
         disposables = new CompositeDisposable();
 
         loadData();
@@ -64,21 +65,7 @@ public class DashboardViewModel extends AndroidViewModel {
 
         // Load statistics
         disposables.add(
-            bookRepository.getTotalBookCount()
-                .zipWith(bookRepository.getAvailableBookCount(), (total, available) -> {
-                    Statistics stats = new Statistics();
-                    stats.setTotalBooks(total);
-                    stats.setAvailableBooks(available);
-                    return stats;
-                })
-                .zipWith(loanRepository.getActiveLoansCount().toSingle(0), (stats, active) -> {
-                    stats.setBorrowedBooks(active);
-                    return stats;
-                })
-                .zipWith(loanRepository.getOverdueLoansCount().toSingle(0), (stats, overdue) -> {
-                    stats.setOverdueBooks(overdue);
-                    return stats;
-                })
+            statsService.dashboardStats()
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(

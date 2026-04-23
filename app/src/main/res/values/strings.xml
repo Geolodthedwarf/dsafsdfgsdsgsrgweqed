@@ -143,4 +143,37 @@
     <string name="disconnect">Disconnect</string>
     <string name="connected">Connected</string>
     <string name="disconnected">Disconnected</string>
+
+    <!-- Missing strings -->
+    <string name="copies_format">Copies: %1$d / %2$d</string>
+    <string name="no_description">No description available</string>
+    <string name="borrowed">Borrowed</string>
+    <string name="lend_book">Lend Book</string>
+    <string name="edit_book">Edit Book</string>
+    <string name="delete_book">Delete Book</string>
+    <string name="actions">Actions</string>
+    <string name="scan_isbn_prompt">Point the camera at a barcode</string>
+    <string name="error_title_required">Title is required</string>
+    <string name="import_export">Import/Export</string>
+    <string name="export_library">Export Library</string>
+    <string name="import_library">Import Library</string>
+    <string name="server_mode_description">Share your library over the local network</string>
+    <string name="statistics">Statistics</string>
+    <string name="diary">Diary</string>
+    <string name="tags">Tags</string>
+    <string name="lend">Lend</string>
+    <string name="ok">OK</string>
+    <string name="error">Error</string>
+    <string name="error_rating_required">Please select a rating</string>
+    <string name="synced_count">Synced %1$d items</string>
+    <string name="sync_error">Sync error</string>
+    <string name="stop">Stop</string>
+    <string name="channel_sync_name">Library sync</string>
+    <string name="channel_sync_description">Background synchronization notifications</string>
+    <string name="channel_server_name">Local server</string>
+    <string name="channel_server_description">Local sharing server notifications</string>
+    <string name="return_book_message">Return book borrowed by %1$s?</string>
+    <string name="tag_name">Tag name</string>
+    <string name="add">Add</string>
+    <string name="bcl_json_payload">.bcl JSON payload</string>
 </resources>

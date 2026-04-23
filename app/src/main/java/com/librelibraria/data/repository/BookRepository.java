@@ -30,28 +30,24 @@ public class BookRepository {
         book.setLastModified(System.currentTimeMillis());
         book.setSynced(false);
         return bookDao.insert(book)
-                .subscribeOn(Schedulers.io())
-                .ignoreElement();
+                .subscribeOn(Schedulers.io());
     }
 
     public Completable updateBook(Book book) {
         book.setLastModified(System.currentTimeMillis());
         book.setSynced(false);
         return bookDao.update(book)
-                .subscribeOn(Schedulers.io())
-                .ignoreElement();
+                .subscribeOn(Schedulers.io());
     }
 
     public Completable deleteBook(Book book) {
         return bookDao.delete(book)
-                .subscribeOn(Schedulers.io())
-                .ignoreElement();
+                .subscribeOn(Schedulers.io());
     }
 
     public Completable deleteBookById(long id) {
         return bookDao.deleteById(id)
-                .subscribeOn(Schedulers.io())
-                .ignoreElement();
+                .subscribeOn(Schedulers.io());
     }
 
     public Single<Book> getBookById(long id) {
@@ -122,20 +118,17 @@ public class BookRepository {
 
     public Completable updateBookRating(long bookId, double rating, String review) {
         return bookDao.updateRating(bookId, rating, review)
-                .subscribeOn(Schedulers.io())
-                .ignoreElement();
+                .subscribeOn(Schedulers.io());
     }
 
     public Completable updateReadingStatus(long bookId, ReadingStatus status) {
         return bookDao.updateReadingStatus(bookId, status)
-                .subscribeOn(Schedulers.io())
-                .ignoreElement();
+                .subscribeOn(Schedulers.io());
     }
 
     public Completable updateAvailableCopies(long bookId, int count) {
         return bookDao.updateAvailableCopies(bookId, count)
-                .subscribeOn(Schedulers.io())
-                .ignoreElement();
+                .subscribeOn(Schedulers.io());
     }
 
     public Single<List<String>> getAllGenres() {
@@ -150,8 +143,7 @@ public class BookRepository {
 
     public Completable markAsSynced(long bookId) {
         return bookDao.markAsSynced(bookId)
-                .subscribeOn(Schedulers.io())
-                .ignoreElement();
+                .subscribeOn(Schedulers.io());
     }
 
     // Tag operations
@@ -172,7 +164,6 @@ public class BookRepository {
 
     public Completable deleteTag(Tag tag) {
         return tagDao.delete(tag)
-                .subscribeOn(Schedulers.io())
-                .ignoreElement();
+                .subscribeOn(Schedulers.io());
     }
 }
