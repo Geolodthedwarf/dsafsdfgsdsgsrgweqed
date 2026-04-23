@@ -35,11 +35,20 @@ public interface AuditLogDao {
     @Query("SELECT * FROM audit_log WHERE entityType = :entityType ORDER BY timestamp DESC")
     Flowable<List<AuditLog>> getLogsByEntityType(String entityType);
 
+    @Query("SELECT * FROM audit_log WHERE entityType = :entityType AND entityId = :entityId ORDER BY timestamp DESC")
+    Single<List<AuditLog>> getLogsForEntity(String entityType, long entityId);
+
     @Query("SELECT * FROM audit_log WHERE action = :action ORDER BY timestamp DESC")
     Flowable<List<AuditLog>> getLogsByAction(String action);
 
     @Query("SELECT * FROM audit_log WHERE timestamp BETWEEN :startTime AND :endTime ORDER BY timestamp DESC")
     Flowable<List<AuditLog>> getLogsBetweenDates(long startTime, long endTime);
+
+    @Query("SELECT * FROM audit_log WHERE timestamp BETWEEN :startTime AND :endTime ORDER BY timestamp DESC")
+    Single<List<AuditLog>> getLogsBetweenDatesSync(long startTime, long endTime);
+
+    @Query("SELECT COUNT(*) FROM audit_log WHERE isSynced = 0")
+    Single<Integer> getUnsyncedCount();
 
     @Query("SELECT * FROM audit_log WHERE isSynced = 0")
     Single<List<AuditLog>> getUnsyncedLogs();

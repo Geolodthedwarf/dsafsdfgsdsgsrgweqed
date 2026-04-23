@@ -13,14 +13,12 @@ import com.librelibraria.data.model.Book;
 import com.librelibraria.data.model.Loan;
 import com.librelibraria.data.repository.SettingsRepository;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
+import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Single;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
 import io.reactivex.rxjava3.schedulers.Schedulers;
@@ -63,7 +61,7 @@ public class SyncManager {
         this.settings = settings;
         this.executor = Executors.newSingleThreadExecutor();
         this.disposables = new CompositeDisposable();
-        this.bclCodec = new BclCodec(database, settings);
+        this.bclCodec = new BclCodec();
         this.lastSyncTime = settings.getLastSyncTime();
     }
 
@@ -206,11 +204,39 @@ public class SyncManager {
     }
 
     public Single<String> exportLibrary() {
-        return bclCodec.exportBcl();
+        return Single.fromCallable(() -> {
+            BclCodec.LibraryData data = new BclCodec.LibraryData();
+            data.books = database.bookDao().getAllBooks().blockingGet();
+            data.loans = database.loanDao().getAllLoans().blockingGet();
+            return bclCodec.encode(data);
+        }).subscribeOn(Schedulers.io());
     }
 
     public Single<Integer> importLibrary(String jsonData) {
-        return bclCodec.importBcl(jsonData);
+        return Single.fromCallable(() -> {
+            BclCodec.LibraryData data = bclCodec.decode(jsonData);
+            int count = 0;
+
+            if (data.books != null) {
+                for (Book book : data.books) {
+                    book.setId(0); // Reset ID for new insertion
+                    book.setSynced(false);
+                    database.bookDao().insert(book).blockingAwait();
+                    count++;
+                }
+            }
+
+            if (data.loans != null) {
+                for (Loan loan : data.loans) {
+                    loan.setId(0);
+                    loan.setSynced(false);
+                    database.loanDao().insert(loan).blockingAwait();
+                    count++;
+                }
+            }
+
+            return count;
+        }).subscribeOn(Schedulers.io());
     }
 
     private boolean isNetworkAvailable() {

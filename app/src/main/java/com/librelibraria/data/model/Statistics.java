@@ -78,4 +78,87 @@ public class Statistics {
 
     public Map<Long, Integer> getTopBorrowers() { return topBorrowers; }
     public void setTopBorrowers(Map<Long, Integer> topBorrowers) { this.topBorrowers = topBorrowers; }
+
+    /**
+     * Statistics about reading status distribution.
+     */
+    public static class ReadingStatusStats {
+        private int totalBooks;
+        private int availableBooks;
+        private int onLoanBooks;
+        private int overdueBooks;
+        private int lostBooks;
+
+        public ReadingStatusStats() {}
+
+        public ReadingStatusStats(int total, int available, int onLoan, int overdue, int lost) {
+            this.totalBooks = total;
+            this.availableBooks = available;
+            this.onLoanBooks = onLoan;
+            this.overdueBooks = overdue;
+            this.lostBooks = lost;
+        }
+
+        public int getTotalBooks() { return totalBooks; }
+        public void setTotalBooks(int totalBooks) { this.totalBooks = totalBooks; }
+
+        public int getAvailableBooks() { return availableBooks; }
+        public void setAvailableBooks(int availableBooks) { this.availableBooks = availableBooks; }
+
+        public int getOnLoanBooks() { return onLoanBooks; }
+        public void setOnLoanBooks(int onLoanBooks) { this.onLoanBooks = onLoanBooks; }
+
+        public int getOverdueBooks() { return overdueBooks; }
+        public void setOverdueBooks(int overdueBooks) { this.overdueBooks = overdueBooks; }
+
+        public int getLostBooks() { return lostBooks; }
+        public void setLostBooks(int lostBooks) { this.lostBooks = lostBooks; }
+    }
+
+    /**
+     * Genre count data for bar chart.
+     */
+    public static class GenreCount {
+        private String genre;
+        private int count;
+
+        public GenreCount() {}
+
+        public GenreCount(String genre, int count) {
+            this.genre = genre;
+            this.count = count;
+        }
+
+        public String getGenre() { return genre; }
+        public void setGenre(String genre) { this.genre = genre; }
+
+        public int getCount() { return count; }
+        public void setCount(int count) { this.count = count; }
+    }
+
+    /**
+     * Monthly activity count for bar chart.
+     */
+    public static class MonthlyCount {
+        private String month;
+        private int loansCount;
+        private int returnsCount;
+
+        public MonthlyCount() {}
+
+        public MonthlyCount(String month, int loans, int returns) {
+            this.month = month;
+            this.loansCount = loans;
+            this.returnsCount = returns;
+        }
+
+        public String getMonth() { return month; }
+        public void setMonth(String month) { this.month = month; }
+
+        public int getLoansCount() { return loansCount; }
+        public void setLoansCount(int loansCount) { this.loansCount = loansCount; }
+
+        public int getReturnsCount() { return returnsCount; }
+        public void setReturnsCount(int returnsCount) { this.returnsCount = returnsCount; }
+    }
 }

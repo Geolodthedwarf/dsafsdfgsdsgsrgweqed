@@ -57,4 +57,10 @@ public interface BorrowerDao {
 
     @Query("SELECT * FROM borrowers ORDER BY totalBorrowed DESC LIMIT :limit")
     Single<List<Borrower>> getTopBorrowers(int limit);
+
+    @Query("SELECT COUNT(*) FROM borrowers")
+    Single<Integer> getTotalCount();
+
+    @Query("SELECT COUNT(*) FROM borrowers")
+    Single<Integer> getBorrowerCount();
 }

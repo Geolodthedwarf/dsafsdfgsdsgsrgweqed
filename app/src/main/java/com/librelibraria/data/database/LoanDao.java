@@ -59,6 +59,18 @@ public interface LoanDao {
     @Query("SELECT * FROM loans WHERE borrowerId = :borrowerId ORDER BY loanDate DESC")
     Flowable<List<Loan>> getLoansForBorrower(long borrowerId);
 
+    @Query("SELECT * FROM loans WHERE status = 'ACTIVE' AND dueDate < :currentTime")
+    Single<List<Loan>> getOverdueLoans(long currentTime);
+
+    @Query("SELECT * FROM loans WHERE status = 'ACTIVE' AND dueDate < :futureTime")
+    Single<List<Loan>> getLoansDueBefore(long futureTime);
+
+    @Query("SELECT * FROM loans WHERE loanDate BETWEEN :startDate AND :endDate")
+    Single<List<Loan>> getLoansBetweenDates(long startDate, long endDate);
+
+    @Query("SELECT * FROM loans WHERE status = 'RETURNED' ORDER BY returnDate DESC")
+    Single<List<Loan>> getReturnedLoans();
+
     @Query("SELECT * FROM loans WHERE isSynced = 0")
     Single<List<Loan>> getUnsyncedLoans();
 

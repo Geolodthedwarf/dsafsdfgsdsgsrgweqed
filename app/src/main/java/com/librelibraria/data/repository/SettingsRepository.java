@@ -105,4 +105,27 @@ public class SettingsRepository {
     public void clearAll() {
         preferences.edit().clear().apply();
     }
+
+    // Methods for compatibility with services
+    public io.reactivex.rxjava3.core.Single<java.util.List<com.librelibraria.data.model.AppSetting>> getAllSettings() {
+        return io.reactivex.rxjava3.core.Single.fromCallable(() -> new java.util.ArrayList<>());
+    }
+
+    public io.reactivex.rxjava3.core.Completable saveSetting(String key, String value) {
+        return io.reactivex.rxjava3.core.Completable.fromAction(() -> preferences.edit().putString(key, value).apply())
+                .subscribeOn(io.reactivex.rxjava3.schedulers.Schedulers.io());
+    }
+
+    public io.reactivex.rxjava3.core.Completable clearAllData() {
+        return io.reactivex.rxjava3.core.Completable.fromAction(this::clearAll)
+                .subscribeOn(io.reactivex.rxjava3.schedulers.Schedulers.io());
+    }
+
+    public io.reactivex.rxjava3.core.Single<String> getSettingsFromRemote() {
+        return io.reactivex.rxjava3.core.Single.just("");
+    }
+
+    public io.reactivex.rxjava3.core.Completable saveSettingsToRemote(String json) {
+        return io.reactivex.rxjava3.core.Completable.complete();
+    }
 }

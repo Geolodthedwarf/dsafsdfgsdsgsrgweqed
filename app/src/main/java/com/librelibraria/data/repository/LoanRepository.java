@@ -101,6 +101,20 @@ public class LoanRepository {
                 .subscribeOn(Schedulers.io());
     }
 
+    // Additional methods for compatibility with services
+    public Single<Long> insert(Loan loan) {
+        return createLoan(loan);
+    }
+
+    public Completable update(Loan loan) {
+        return updateLoan(loan);
+    }
+
+    public Completable delete(Loan loan) {
+        return loanDao.delete(loan)
+                .subscribeOn(Schedulers.io());
+    }
+
     public Single<Borrower> getBorrowerById(long id) {
         return borrowerDao.getById(id)
                 .subscribeOn(Schedulers.io());

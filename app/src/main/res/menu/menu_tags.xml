@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <!-- Bulk add tags -->
+    <item
+        android:id="@+id/action_bulk_add"
+        android:icon="@drawable/ic_add"
+        android:title="@string/bulk_add_tags"
+        app:showAsAction="ifRoom" />
+
+</menu>

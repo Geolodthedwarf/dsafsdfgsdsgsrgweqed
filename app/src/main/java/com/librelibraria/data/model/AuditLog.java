@@ -1,6 +1,7 @@
 package com.librelibraria.data.model;
 
 import androidx.room.Entity;
+import androidx.room.Ignore;
 import androidx.room.PrimaryKey;
 
 /**
@@ -25,12 +26,14 @@ public class AuditLog {
         this.isSynced = false;
     }
 
+    @Ignore
     public AuditLog(String action, String details) {
         this();
         this.action = action;
         this.details = details;
     }
 
+    @Ignore
     public AuditLog(String action, String details, String entityType, long entityId) {
         this(action, details);
         this.entityType = entityType;

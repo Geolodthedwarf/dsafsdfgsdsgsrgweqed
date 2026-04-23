@@ -1,6 +1,7 @@
 package com.librelibraria.data.model;
 
 import androidx.room.Entity;
+import androidx.room.Ignore;
 import androidx.room.PrimaryKey;
 
 /**
@@ -24,6 +25,7 @@ public class Tag {
         this.isSynced = false;
     }
 
+    @Ignore
     public Tag(String name) {
         this();
         this.name = name;

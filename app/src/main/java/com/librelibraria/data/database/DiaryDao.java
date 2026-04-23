@@ -37,6 +37,9 @@ public interface DiaryDao {
     @Query("SELECT * FROM diary_entries WHERE id = :id")
     Single<DiaryEntry> getById(long id);
 
+    @Query("SELECT * FROM diary_entries WHERE id = :id")
+    DiaryEntry getEntryById(long id);
+
     @Query("SELECT * FROM diary_entries ORDER BY date DESC")
     Flowable<List<DiaryEntry>> getAllEntries();
 
@@ -52,11 +55,23 @@ public interface DiaryDao {
     @Query("SELECT * FROM diary_entries WHERE date BETWEEN :startDate AND :endDate ORDER BY date DESC")
     Flowable<List<DiaryEntry>> getEntriesBetweenDates(long startDate, long endDate);
 
+    @Query("SELECT * FROM diary_entries WHERE date BETWEEN :startDate AND :endDate ORDER BY date DESC")
+    Single<List<DiaryEntry>> getEntriesBetweenDatesSync(long startDate, long endDate);
+
+    @Query("SELECT * FROM diary_entries ORDER BY date DESC LIMIT :limit")
+    Single<List<DiaryEntry>> getRecentEntries(int limit);
+
+    @Query("SELECT * FROM diary_entries WHERE bookTitle LIKE '%' || :query || '%' OR note LIKE '%' || :query || '%' ORDER BY date DESC")
+    Single<List<DiaryEntry>> searchEntries(String query);
+
     @Query("SELECT * FROM diary_entries WHERE isSynced = 0")
     Single<List<DiaryEntry>> getUnsyncedEntries();
 
     @Query("UPDATE diary_entries SET isSynced = 1 WHERE id = :id")
     Completable markAsSynced(long id);
+
+    @Query("SELECT COUNT(*) FROM diary_entries")
+    Single<Integer> getEntriesCount();
 
     @Query("SELECT COUNT(*) FROM diary_entries")
     Single<Integer> getTotalCount();

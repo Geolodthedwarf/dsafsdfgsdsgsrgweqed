@@ -15,6 +15,8 @@
     
     <!-- Dashboard -->
     <string name="welcome_message">Welcome back!</string>
+    <string name="overview">Overview</string>
+    <string name="reading_status">Reading Status</string>
     <string name="total_books">Total Books</string>
     <string name="active_loans">Active Loans</string>
     <string name="total_borrowers">Total Borrowers</string>
@@ -62,6 +64,8 @@
     <string name="category">Category</string>
     <string name="quantity">Quantity</string>
     <string name="description">Description</string>
+    <string name="language">Language</string>
+    <string name="shelf">Shelf</string>
     <string name="notes">Notes</string>
     <string name="save">Save</string>
     <string name="cancel">Cancel</string>
@@ -176,4 +180,45 @@
     <string name="tag_name">Tag name</string>
     <string name="add">Add</string>
     <string name="bcl_json_payload">.bcl JSON payload</string>
+
+    <!-- Diary -->
+    <string name="reading_diary">Reading Diary</string>
+    <string name="empty_diary">Empty diary</string>
+    <string name="empty_diary_title">No diary entries yet</string>
+    <string name="empty_diary_message">Start documenting your reading journey by adding your first entry.</string>
+    <string name="add_note">Add Note</string>
+    <string name="edit_note">Edit Note</string>
+    <string name="book_title">Book Title</string>
+    <string name="date">Date</string>
+    <string name="quote_optional">Quote (optional)</string>
+    <string name="note">Note</string>
+    <string name="delete_note">Delete Note</string>
+    <string name="delete_note_confirm">Delete diary entry for \"%s\"?</string>
+    <string name="all_entries">All Entries</string>
+    <string name="this_week">This Week</string>
+    <string name="this_month">This Month</string>
+    <string name="export_diary">Export Diary</string>
+
+    <!-- Tags -->
+    <string name="manage_tags">Manage Tags</string>
+    <string name="add_tag">Add Tag</string>
+    <string name="edit_tag">Edit Tag</string>
+    <string name="delete_tag">Delete Tag</string>
+    <string name="delete_tag_confirm">Delete tag \"%s\"?</string>
+    <string name="bulk_add_tags">Bulk Add Tags</string>
+    <string name="enter_tags_hint">Enter tags separated by commas or new lines</string>
+    <string name="no_tags">No tags</string>
+    <string name="no_tags_message">Create tags to organize your library</string>
+
+    <!-- Statistics -->
+    <string name="reading">Reading</string>
+    <string name="read">Read</string>
+    <string name="own">Own</string>
+    <string name="want_to_read">Want to Read</string>
+    <string name="stopped">Stopped</string>
+    <string name="processing">Processing</string>
+    <string name="no_data">No data available</string>
+    <string name="books_added">Books Added</string>
+    <string name="loans">Loans</string>
+
 </resources>

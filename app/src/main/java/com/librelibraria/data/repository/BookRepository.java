@@ -166,4 +166,50 @@ public class BookRepository {
         return tagDao.delete(tag)
                 .subscribeOn(Schedulers.io());
     }
+
+    // Additional methods for compatibility with services
+    public Completable insert(Book book) {
+        return insertBook(book);
+    }
+
+    public Completable update(Book book) {
+        return updateBook(book);
+    }
+
+    public Completable delete(Book book) {
+        return deleteBook(book);
+    }
+
+    public Single<List<Book>> getBooksByStatus(String status) {
+        return bookDao.getBooksByReadingStatus(ReadingStatus.valueOf(status))
+                .firstOrError();
+    }
+
+    public Single<Integer> getTotalCount() {
+        return bookDao.getTotalCount();
+    }
+
+    public Single<Integer> getAvailableCount() {
+        return bookDao.getAvailableCount();
+    }
+
+    public Single<List<Book>> searchBooksWithFilters(String query, String status, String genre) {
+        return bookDao.searchBooksWithFilters(query, status, genre)
+                .firstOrError();
+    }
+
+    public Single<Tag> getTagById(long tagId) {
+        return tagDao.getById(tagId)
+                .subscribeOn(Schedulers.io());
+    }
+
+    public Completable updateTag(Tag tag) {
+        return tagDao.update(tag)
+                .subscribeOn(Schedulers.io());
+    }
+
+    public Flowable<List<Book>> getBooksByTag(long tagId) {
+        return bookDao.getBooksByTagId(tagId)
+                .subscribeOn(Schedulers.io());
+    }
 }

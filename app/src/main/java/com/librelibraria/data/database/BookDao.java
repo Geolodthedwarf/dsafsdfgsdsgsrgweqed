@@ -107,6 +107,18 @@ public interface BookDao {
     @Query("SELECT * FROM books WHERE tags LIKE '%' || :tag || '%' ORDER BY title ASC")
     Flowable<List<Book>> getBooksByTag(String tag);
 
+    @Query("SELECT * FROM books WHERE tags LIKE '%' || :tagId || '%' ORDER BY title ASC")
+    Flowable<List<Book>> getBooksByTagId(long tagId);
+
+    @Query("SELECT * FROM books WHERE dateAdded BETWEEN :startDate AND :endDate ORDER BY dateAdded DESC")
+    Single<List<Book>> getBooksAddedBetween(long startDate, long endDate);
+
+    @Query("SELECT COUNT(*) FROM books")
+    Single<Integer> getBookCount();
+
+    @Query("SELECT * FROM books WHERE (title LIKE '%' || :query || '%' OR author LIKE '%' || :query || '%') AND (:status IS NULL OR :status = '' OR readingStatus = :status) AND (:genre IS NULL OR :genre = '' OR genre = :genre)")
+    Flowable<List<Book>> searchBooksWithFilters(String query, String status, String genre);
+
     class GenreCount {
         public String genre;
         public int count;
