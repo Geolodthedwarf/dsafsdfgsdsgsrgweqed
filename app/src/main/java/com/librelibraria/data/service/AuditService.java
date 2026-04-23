@@ -65,7 +65,7 @@ public class AuditService {
      * Get all audit logs.
      */
     public Single<List<AuditLog>> getAllLogs() {
-        return auditLogDao.getAllLogs();
+        return auditLogDao.getAllLogsSingle();
     }
 
     /**
@@ -79,7 +79,7 @@ public class AuditService {
      * Get recent audit logs.
      */
     public Single<List<AuditLog>> getRecentLogs(int limit) {
-        return auditLogDao.getRecentLogs(limit);
+        return auditLogDao.getRecentLogsSingle(limit);
     }
 
     /**
@@ -100,6 +100,6 @@ public class AuditService {
      * Get logs between dates.
      */
     public Single<List<AuditLog>> getLogsBetweenDates(long startDate, long endDate) {
-        return auditLogDao.getLogsBetweenDates(startDate, endDate);
+        return auditLogDao.getLogsBetweenDatesSingle(startDate, endDate);
     }
 }

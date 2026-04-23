@@ -66,6 +66,26 @@ public class LoanRepository {
                 .subscribeOn(Schedulers.io());
     }
 
+    public Single<List<Loan>> getLoansForBorrower(long borrowerId) {
+        return loanDao.getLoansForBorrower(borrowerId)
+                .subscribeOn(Schedulers.io());
+    }
+
+    public Single<List<Loan>> getReturnedLoans() {
+        return loanDao.getReturnedLoans()
+                .subscribeOn(Schedulers.io());
+    }
+
+    public Single<List<Loan>> getOverdueLoans(long currentTime) {
+        return loanDao.getOverdueLoans(currentTime)
+                .subscribeOn(Schedulers.io());
+    }
+
+    public Single<List<Loan>> getLoansDueBefore(long futureTime) {
+        return loanDao.getLoansDueBefore(futureTime)
+                .subscribeOn(Schedulers.io());
+    }
+
     public Single<Integer> getActiveLoansCount() {
         return loanDao.getActiveLoansCount()
                 .subscribeOn(Schedulers.io());

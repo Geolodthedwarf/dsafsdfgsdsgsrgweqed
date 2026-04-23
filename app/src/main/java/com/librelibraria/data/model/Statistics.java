@@ -67,6 +67,12 @@ public class Statistics {
     public int getProcessingBooks() { return processingBooks; }
     public void setProcessingBooks(int processingBooks) { this.processingBooks = processingBooks; }
 
+    // New setters for service compatibility
+    public void setOnLoanBooks(int onLoanBooks) { this.borrowedBooks = onLoanBooks; }
+    public void setActiveLoans(Integer activeLoans) { /* not stored directly */ }
+    public void setOverdueLoans(Integer overdueLoans) { this.overdueBooks = overdueLoans != null ? overdueLoans : 0; }
+    public void setTotalBorrowers(Integer totalBorrowers) { /* not stored directly */ }
+
     public double getAverageRating() { return averageRating; }
     public void setAverageRating(double averageRating) { this.averageRating = averageRating; }
 

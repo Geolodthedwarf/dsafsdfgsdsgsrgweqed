@@ -47,6 +47,7 @@ public class Loan {
     private String notes;
     private long lastModified;
     private boolean isSynced;
+    private int renewalCount;
 
     public Loan() {
         this.loanDate = System.currentTimeMillis();
@@ -100,6 +101,9 @@ public class Loan {
 
     public boolean isSynced() { return isSynced; }
     public void setSynced(boolean synced) { isSynced = synced; }
+
+    public int getRenewalCount() { return renewalCount; }
+    public void setRenewalCount(int renewalCount) { this.renewalCount = renewalCount; }
 
     public boolean isOverdue() {
         if (status != LoanStatus.ACTIVE) return false;

@@ -41,6 +41,7 @@ public class Book {
     private long lastModified;
     private boolean isSynced;
     private long localId;
+    private String status; // "AVAILABLE", "ON_LOAN", etc.
 
     public Book() {
         this.dateAdded = System.currentTimeMillis();
@@ -50,6 +51,7 @@ public class Book {
         this.language = "Ukrainian";
         this.readingStatus = ReadingStatus.OWN;
         this.isSynced = false;
+        this.status = "AVAILABLE";
     }
 
     // Getters and Setters
@@ -124,6 +126,9 @@ public class Book {
 
     public long getLocalId() { return localId; }
     public void setLocalId(long localId) { this.localId = localId; }
+
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
 
     public boolean isAvailable() {
         return availableCopies > 0;

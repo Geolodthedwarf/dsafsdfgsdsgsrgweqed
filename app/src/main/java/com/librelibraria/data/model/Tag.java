@@ -50,6 +50,16 @@ public class Tag {
     public boolean isSynced() { return isSynced; }
     public void setSynced(boolean synced) { isSynced = synced; }
 
+    // Additional fields for service compatibility
+    private long lastModified;
+    private int bookCount;
+
+    public long getLastModified() { return lastModified; }
+    public void setLastModified(long lastModified) { this.lastModified = lastModified; }
+
+    public int getBookCount() { return bookCount; }
+    public void setBookCount(int bookCount) { this.bookCount = bookCount; }
+
     public void incrementUsage() {
         this.usageCount++;
     }

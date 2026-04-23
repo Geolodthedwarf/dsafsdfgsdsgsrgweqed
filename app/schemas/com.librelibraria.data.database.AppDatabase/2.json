@@ -2,11 +2,11 @@
   "formatVersion": 1,
   "database": {
     "version": 2,
-    "identityHash": "3c36c8c3a7645a40acb5c345dc023e8d",
+    "identityHash": "7db17934df52722d60d2eebaffeb826d",
     "entities": [
       {
         "tableName": "books",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `title` TEXT, `author` TEXT, `isbn` TEXT, `publisher` TEXT, `edition` TEXT, `publishYear` TEXT, `genre` TEXT, `language` TEXT, `copies` INTEGER NOT NULL, `availableCopies` INTEGER NOT NULL, `shelfLocation` TEXT, `tags` TEXT, `description` TEXT, `dateAdded` INTEGER NOT NULL, `rating` REAL NOT NULL, `review` TEXT, `readingStatus` TEXT, `quickNotes` TEXT, `readCount` INTEGER NOT NULL, `customCoverUrl` TEXT, `lastModified` INTEGER NOT NULL, `isSynced` INTEGER NOT NULL, `localId` INTEGER NOT NULL)",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `title` TEXT, `author` TEXT, `isbn` TEXT, `publisher` TEXT, `edition` TEXT, `publishYear` TEXT, `genre` TEXT, `language` TEXT, `copies` INTEGER NOT NULL, `availableCopies` INTEGER NOT NULL, `shelfLocation` TEXT, `tags` TEXT, `description` TEXT, `dateAdded` INTEGER NOT NULL, `rating` REAL NOT NULL, `review` TEXT, `readingStatus` TEXT, `quickNotes` TEXT, `readCount` INTEGER NOT NULL, `customCoverUrl` TEXT, `lastModified` INTEGER NOT NULL, `isSynced` INTEGER NOT NULL, `localId` INTEGER NOT NULL, `status` TEXT)",
         "fields": [
           {
             "fieldPath": "id",
@@ -151,6 +151,12 @@
             "columnName": "localId",
             "affinity": "INTEGER",
             "notNull": true
+          },
+          {
+            "fieldPath": "status",
+            "columnName": "status",
+            "affinity": "TEXT",
+            "notNull": false
           }
         ],
         "primaryKey": {
@@ -232,7 +238,7 @@
       },
       {
         "tableName": "loans",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `bookId` INTEGER NOT NULL, `borrowerId` INTEGER, `borrowerName` TEXT, `loanDate` INTEGER NOT NULL, `dueDate` INTEGER NOT NULL, `returnDate` INTEGER NOT NULL, `status` TEXT, `conditionOnLoan` TEXT, `conditionOnReturn` TEXT, `lateFee` REAL NOT NULL, `notes` TEXT, `lastModified` INTEGER NOT NULL, `isSynced` INTEGER NOT NULL, FOREIGN KEY(`bookId`) REFERENCES `books`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`borrowerId`) REFERENCES `borrowers`(`id`) ON UPDATE NO ACTION ON DELETE SET NULL )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `bookId` INTEGER NOT NULL, `borrowerId` INTEGER, `borrowerName` TEXT, `loanDate` INTEGER NOT NULL, `dueDate` INTEGER NOT NULL, `returnDate` INTEGER NOT NULL, `status` TEXT, `conditionOnLoan` TEXT, `conditionOnReturn` TEXT, `lateFee` REAL NOT NULL, `notes` TEXT, `lastModified` INTEGER NOT NULL, `isSynced` INTEGER NOT NULL, `renewalCount` INTEGER NOT NULL, FOREIGN KEY(`bookId`) REFERENCES `books`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`borrowerId`) REFERENCES `borrowers`(`id`) ON UPDATE NO ACTION ON DELETE SET NULL )",
         "fields": [
           {
             "fieldPath": "id",
@@ -317,6 +323,12 @@
             "columnName": "isSynced",
             "affinity": "INTEGER",
             "notNull": true
+          },
+          {
+            "fieldPath": "renewalCount",
+            "columnName": "renewalCount",
+            "affinity": "INTEGER",
+            "notNull": true
           }
         ],
         "primaryKey": {
@@ -372,7 +384,7 @@
       },
       {
         "tableName": "tags",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT, `color` TEXT, `usageCount` INTEGER NOT NULL, `dateAdded` INTEGER NOT NULL, `isSynced` INTEGER NOT NULL)",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT, `color` TEXT, `usageCount` INTEGER NOT NULL, `dateAdded` INTEGER NOT NULL, `isSynced` INTEGER NOT NULL, `lastModified` INTEGER NOT NULL, `bookCount` INTEGER NOT NULL)",
         "fields": [
           {
             "fieldPath": "id",
@@ -407,6 +419,18 @@
           {
             "fieldPath": "isSynced",
             "columnName": "isSynced",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "lastModified",
+            "columnName": "lastModified",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "bookCount",
+            "columnName": "bookCount",
             "affinity": "INTEGER",
             "notNull": true
           }
@@ -608,7 +632,7 @@
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '3c36c8c3a7645a40acb5c345dc023e8d')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '7db17934df52722d60d2eebaffeb826d')"
     ]
   }
 }
