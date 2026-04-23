@@ -1,0 +1,95 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace 'com.librelibraria'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId "com.librelibraria"
+        minSdk 24
+        targetSdk 34
+        versionCode 1
+        versionName "1.0.0"
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+
+        javaCompileOptions {
+            annotationProcessorOptions {
+                arguments += ["room.schemaLocation": "$projectDir/schemas".toString()]
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    buildFeatures {
+        viewBinding true
+    }
+}
+
+dependencies {
+    // AndroidX Core
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+    implementation 'androidx.core:core-ktx:1.12.0'
+    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
+    implementation 'androidx.swiperefreshlayout:swiperefreshlayout:1.1.0'
+
+    // Material Design
+    implementation "com.google.android.material:material:${rootProject.ext.material_version}"
+
+    // Lifecycle & ViewModel
+    implementation "androidx.lifecycle:lifecycle-viewmodel:${rootProject.ext.lifecycle_version}"
+    implementation "androidx.lifecycle:lifecycle-livedata:${rootProject.ext.lifecycle_version}"
+    implementation "androidx.lifecycle:lifecycle-runtime:${rootProject.ext.lifecycle_version}"
+    implementation "androidx.lifecycle:lifecycle-common-java8:${rootProject.ext.lifecycle_version}"
+
+    // Room Database
+    implementation "androidx.room:room-runtime:${rootProject.ext.room_version}"
+    annotationProcessor "androidx.room:room-compiler:${rootProject.ext.room_version}"
+    implementation "androidx.room:room-rxjava3:${rootProject.ext.room_version}"
+
+    // Retrofit & OkHttp
+    implementation "com.squareup.retrofit2:retrofit:${rootProject.ext.retrofit_version}"
+    implementation "com.squareup.retrofit2:converter-gson:${rootProject.ext.retrofit_version}"
+    implementation "com.squareup.retrofit2:adapter-rxjava3:${rootProject.ext.retrofit_version}"
+    implementation "com.squareup.okhttp3:okhttp:${rootProject.ext.okhttp_version}"
+    implementation "com.squareup.okhttp3:logging-interceptor:${rootProject.ext.okhttp_version}"
+
+    // RxJava
+    implementation "io.reactivex.rxjava3:rxjava:${rootProject.ext.rxjava_version}"
+    implementation "io.reactivex.rxjava3:rxandroid:${rootProject.ext.rxandroid_version}"
+
+    // Glide
+    implementation "com.github.bumptech.glide:glide:${rootProject.ext.glide_version}"
+    annotationProcessor "com.github.bumptech.glide:compiler:${rootProject.ext.glide_version}"
+
+    // MPAndroidChart
+    implementation "com.github.PhilJay:MPAndroidChart:v${rootProject.ext.mpchart_version}"
+
+    // NanoHTTPD for embedded server
+    implementation "org.nanohttpd:nanohttpd:${rootProject.ext.nanohhttpd_version}"
+
+    // Gson
+    implementation 'com.google.code.gson:gson:2.10.1'
+
+    // ZXing for barcode scanning
+    implementation 'com.google.zxing:core:3.5.3'
+    implementation 'com.journeyapps:zxing-android-embedded:4.3.0'
+
+    // Testing
+    testImplementation 'junit:junit:4.13.2'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.5'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
+}

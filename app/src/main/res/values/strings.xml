@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">LibreLibraria</string>
+    
+    <!-- Navigation -->
+    <string name="dashboard">Dashboard</string>
+    <string name="catalog">Catalog</string>
+    <string name="lending">Lending</string>
+    <string name="borrowers">Borrowers</string>
+    <string name="settings">Settings</string>
+    <string name="about">About</string>
+    <string name="search">Search</string>
+    <string name="filter">Filter</string>
+    <string name="sync">Sync</string>
+    
+    <!-- Dashboard -->
+    <string name="welcome_message">Welcome back!</string>
+    <string name="total_books">Total Books</string>
+    <string name="active_loans">Active Loans</string>
+    <string name="total_borrowers">Total Borrowers</string>
+    <string name="overdue_items">Overdue</string>
+    <string name="recent_activity">Recent Activity</string>
+    <string name="quick_actions">Quick Actions</string>
+    <string name="add_book">Add Book</string>
+    <string name="new_loan">New Loan</string>
+    <string name="add_borrower">Add Borrower</string>
+    
+    <!-- Catalog -->
+    <string name="search_books">Search books, authors, ISBN...</string>
+    <string name="all">All</string>
+    <string name="available">Available</string>
+    <string name="on_loan">On Loan</string>
+    <string name="overdue">Overdue</string>
+    <string name="lost">Lost</string>
+    <string name="books_found">%d books found</string>
+    <string name="no_books">No books</string>
+    <string name="no_books_found">No books found</string>
+    <string name="add_first_book">Add your first book to get started</string>
+    <string name="book_cover">Book cover</string>
+    <string name="borrowed_by">Borrowed by</string>
+    
+    <!-- Lending -->
+    <string name="search_loans">Search loans...</string>
+    <string name="returned">Returned</string>
+    <string name="all_loans">All Loans</string>
+    <string name="due_soon">Due Soon</string>
+    <string name="no_loans">No loans</string>
+    <string name="no_active_loans">No active loans</string>
+    <string name="create_first_loan">Create your first loan to get started</string>
+    <string name="view_details">Details</string>
+    <string name="return_book">Return</string>
+    <string name="loan_date">Loan date: %s</string>
+    <string name="due_date">Due: %s</string>
+    
+    <!-- Book Details -->
+    <string name="title">Title</string>
+    <string name="author">Author</string>
+    <string name="isbn">ISBN</string>
+    <string name="publisher">Publisher</string>
+    <string name="year">Year</string>
+    <string name="genre">Genre</string>
+    <string name="category">Category</string>
+    <string name="quantity">Quantity</string>
+    <string name="description">Description</string>
+    <string name="notes">Notes</string>
+    <string name="save">Save</string>
+    <string name="cancel">Cancel</string>
+    <string name="delete">Delete</string>
+    <string name="edit">Edit</string>
+    
+    <!-- Borrower Details -->
+    <string name="name">Name</string>
+    <string name="email">Email</string>
+    <string name="phone">Phone</string>
+    <string name="address">Address</string>
+    <string name="member_since">Member since</string>
+    <string name="total_loans">Total loans</string>
+    <string name="active_loans_count">Active loans: %d</string>
+    
+    <!-- Loan Details -->
+    <string name="book">Book</string>
+    <string name="borrower">Borrower</string>
+    <string name="loan_date_full">Loan Date</string>
+    <string name="due_date_full">Due Date</string>
+    <string name="return_date">Return Date</string>
+    <string name="status">Status</string>
+    <string name="renew">Renew</string>
+    <string name="confirm_return">Confirm Return</string>
+    
+    <!-- Dialogs -->
+    <string name="confirm">Confirm</string>
+    <string name="are_you_sure">Are you sure?</string>
+    <string name="delete_book_confirm">Are you sure you want to delete this book?</string>
+    <string name="delete_borrower_confirm">Are you sure you want to delete this borrower?</string>
+    <string name="return_confirm">Confirm book return?</string>
+    
+    <!-- Errors -->
+    <string name="error_required_field">This field is required</string>
+    <string name="error_invalid_email">Invalid email address</string>
+    <string name="error_invalid_isbn">Invalid ISBN</string>
+    <string name="error_loading_data">Error loading data</string>
+    <string name="error_saving_data">Error saving data</string>
+    <string name="error_network">Network error. Please try again.</string>
+    
+    <!-- Activity Types -->
+    <string name="activity_icon">Activity icon</string>
+    <string name="book_added">Book added</string>
+    <string name="book_updated">Book updated</string>
+    <string name="book_deleted">Book deleted</string>
+    <string name="loan_created">Loan created</string>
+    <string name="loan_returned">Loan returned</string>
+    <string name="borrower_added">Borrower added</string>
+    <string name="borrower_updated">Borrower updated</string>
+    
+    <!-- Time -->
+    <string name="just_now">Just now</string>
+    <string name="minutes_ago">%d minutes ago</string>
+    <string name="hours_ago">%d hours ago</string>
+    <string name="days_ago">%d days ago</string>
+    <string name="today">Today</string>
+    <string name="yesterday">Yesterday</string>
+    
+    <!-- Sync -->
+    <string name="syncing">Syncing...</string>
+    <string name="sync_complete">Sync complete</string>
+    <string name="sync_failed">Sync failed</string>
+    <string name="last_sync">Last sync: %s</string>
+    <string name="never_synced">Never synced</string>
+    
+    <!-- Server Mode -->
+    <string name="server_mode">Server Mode</string>
+    <string name="server_running">Server running on %s</string>
+    <string name="server_stopped">Server stopped</string>
+    <string name="start_server">Start Server</string>
+    <string name="stop_server">Stop Server</string>
+    <string name="server_port">Port: %d</string>
+    
+    <!-- Database -->
+    <string name="local_database">Local Database</string>
+    <string name="remote_database">Remote Database</string>
+    <string name="database_url">Database URL</string>
+    <string name="connect">Connect</string>
+    <string name="disconnect">Disconnect</string>
+    <string name="connected">Connected</string>
+    <string name="disconnected">Disconnected</string>
+</resources>

@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Base application theme -->
+    <style name="Theme.LibreLibraria" parent="Theme.Material3.Light.NoActionBar">
+        <!-- Primary brand color -->
+        <item name="colorPrimary">@color/primary</item>
+        <item name="colorPrimaryDark">@color/primary_dark</item>
+        <item name="colorPrimaryVariant">@color/primary_dark</item>
+        <item name="colorOnPrimary">@android:color/white</item>
+        
+        <!-- Secondary brand color -->
+        <item name="colorSecondary">@color/secondary</item>
+        <item name="colorSecondaryVariant">@color/secondary</item>
+        <item name="colorOnSecondary">@android:color/black</item>
+        
+        <!-- Status bar color -->
+        <item name="android:statusBarColor">@color/primary_dark</item>
+        <item name="android:navigationBarColor">@color/white</item>
+        
+        <!-- Background and surface colors -->
+        <item name="android:colorBackground">@color/gray_50</item>
+        <item name="colorSurface">@color/white</item>
+        <item name="colorOnSurface">@color/gray_900</item>
+        <item name="colorOnSurfaceVariant">@color/gray_600</item>
+        
+        <!-- Error color -->
+        <item name="colorError">@color/error</item>
+        <item name="colorOnError">@android:color/white</item>
+    </style>
+
+    <!-- Card styles -->
+    <style name="Widget.LibreLibraria.CardView" parent="Widget.Material3.CardView.Elevated">
+        <item name="cardCornerRadius">12dp</item>
+        <item name="cardElevation">2dp</item>
+    </style>
+
+    <style name="Widget.LibreLibraria.CardView.Filled" parent="Widget.Material3.CardView.Filled">
+        <item name="cardCornerRadius">12dp</item>
+    </style>
+
+    <!-- Button styles -->
+    <style name="Widget.LibreLibraria.Button" parent="Widget.Material3.Button">
+        <item name="cornerRadius">8dp</item>
+    </style>
+
+    <style name="Widget.LibreLibraria.Button.Tonal" parent="Widget.Material3.Button.TonalButton">
+        <item name="cornerRadius">8dp</item>
+    </style>
+
+    <style name="Widget.LibreLibraria.Button.Text" parent="Widget.Material3.Button.TextButton">
+    </style>
+
+    <!-- Chip styles -->
+    <style name="Widget.LibreLibraria.Chip.Filter" parent="Widget.Material3.Chip.Filter">
+        <item name="chipCornerRadius">8dp</item>
+    </style>
+
+    <style name="Widget.LibreLibraria.Chip.Assist" parent="Widget.Material3.Chip.Assist">
+        <item name="chipCornerRadius">16dp</item>
+    </style>
+
+    <!-- Text Input styles -->
+    <style name="Widget.LibreLibraria.TextInputLayout" parent="Widget.Material3.TextInputLayout.OutlinedBox">
+        <item name="boxCornerRadiusTopStart">8dp</item>
+        <item name="boxCornerRadiusTopEnd">8dp</item>
+        <item name="boxCornerRadiusBottomStart">8dp</item>
+        <item name="boxCornerRadiusBottomEnd">8dp</item>
+    </style>
+
+    <!-- FAB styles -->
+    <style name="Widget.LibreLibraria.ExtendedFloatingActionButton" parent="Widget.Material3.ExtendedFloatingActionButton.Primary">
+    </style>
+
+    <!-- Bottom Navigation styles -->
+    <style name="Widget.LibreLibraria.BottomNavigationView" parent="Widget.Material3.BottomNavigationView">
+        <item name="itemIconTint">@color/bottom_nav_color</item>
+        <item name="itemTextColor">@color/bottom_nav_color</item>
+    </style>
+
+    <!-- Tab Layout styles -->
+    <style name="Widget.LibreLibraria.TabLayout" parent="Widget.Material3.TabLayout">
+        <item name="tabIndicatorColor">@color/primary</item>
+        <item name="tabSelectedTextColor">@color/primary</item>
+        <item name="tabTextColor">@color/gray_600</item>
+    </style>
+
+    <!-- Toolbar styles -->
+    <style name="Widget.LibreLibraria.Toolbar" parent="Widget.Material3.Toolbar">
+        <item name="titleTextColor">@android:color/white</item>
+        <item name="android:background">@color/primary</item>
+    </style>
+
+</resources>
