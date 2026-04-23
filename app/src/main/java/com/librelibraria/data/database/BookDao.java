@@ -17,14 +17,11 @@ import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Flowable;
 import io.reactivex.rxjava3.core.Single;
 
-/**
- * Data Access Object for Book entity.
- */
 @Dao
 public interface BookDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    Completable insert(Book book);
+    Single<Long> insert(Book book);
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     Completable insertAll(List<Book> books);

@@ -16,9 +16,6 @@ import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Flowable;
 import io.reactivex.rxjava3.core.Single;
 
-/**
- * Data Access Object for DiaryEntry entity.
- */
 @Dao
 public interface DiaryDao {
 
@@ -37,8 +34,9 @@ public interface DiaryDao {
     @Query("SELECT * FROM diary_entries WHERE id = :id")
     Single<DiaryEntry> getById(long id);
 
+    // Fixed: was incorrectly returning DiaryEntry synchronously; Room requires reactive/async return
     @Query("SELECT * FROM diary_entries WHERE id = :id")
-    DiaryEntry getEntryById(long id);
+    Single<DiaryEntry> getEntryById(long id);
 
     @Query("SELECT * FROM diary_entries ORDER BY date DESC")
     Flowable<List<DiaryEntry>> getAllEntries();

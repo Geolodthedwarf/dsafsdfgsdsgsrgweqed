@@ -5,29 +5,26 @@ import androidx.room.ForeignKey;
 import androidx.room.Index;
 import androidx.room.PrimaryKey;
 
-/**
- * Loan entity representing a book lending record.
- */
 @Entity(
-    tableName = "loans",
-    foreignKeys = {
-        @ForeignKey(
-            entity = Book.class,
-            parentColumns = "id",
-            childColumns = "bookId",
-            onDelete = ForeignKey.CASCADE
-        ),
-        @ForeignKey(
-            entity = Borrower.class,
-            parentColumns = "id",
-            childColumns = "borrowerId",
-            onDelete = ForeignKey.SET_NULL
-        )
-    },
-    indices = {
-        @Index("bookId"),
-        @Index("borrowerId")
-    }
+        tableName = "loans",
+        foreignKeys = {
+                @ForeignKey(
+                        entity = Book.class,
+                        parentColumns = "id",
+                        childColumns = "bookId",
+                        onDelete = ForeignKey.CASCADE
+                ),
+                @ForeignKey(
+                        entity = Borrower.class,
+                        parentColumns = "id",
+                        childColumns = "borrowerId",
+                        onDelete = ForeignKey.SET_NULL
+                )
+        },
+        indices = {
+                @Index("bookId"),
+                @Index("borrowerId")
+        }
 )
 public class Loan {
 
@@ -45,21 +42,19 @@ public class Loan {
     private String conditionOnReturn;
     private double lateFee;
     private String notes;
+    private int renewalCount;
     private long lastModified;
     private boolean isSynced;
-    private int renewalCount;
 
     public Loan() {
         this.loanDate = System.currentTimeMillis();
         this.status = LoanStatus.ACTIVE;
+        this.renewalCount = 0;
         this.lastModified = System.currentTimeMillis();
         this.isSynced = false;
-
-        // Default due date: 14 days from loan
         this.dueDate = loanDate + (14L * 24 * 60 * 60 * 1000);
     }
 
-    // Getters and Setters
     public long getId() { return id; }
     public void setId(long id) { this.id = id; }
 
@@ -96,14 +91,14 @@ public class Loan {
     public String getNotes() { return notes; }
     public void setNotes(String notes) { this.notes = notes; }
 
+    public int getRenewalCount() { return renewalCount; }
+    public void setRenewalCount(int renewalCount) { this.renewalCount = renewalCount; }
+
     public long getLastModified() { return lastModified; }
     public void setLastModified(long lastModified) { this.lastModified = lastModified; }
 
     public boolean isSynced() { return isSynced; }
     public void setSynced(boolean synced) { isSynced = synced; }
-
-    public int getRenewalCount() { return renewalCount; }
-    public void setRenewalCount(int renewalCount) { this.renewalCount = renewalCount; }
 
     public boolean isOverdue() {
         if (status != LoanStatus.ACTIVE) return false;
@@ -117,6 +112,6 @@ public class Loan {
 
     public double calculateLateFee() {
         if (!isOverdue()) return 0;
-        return getDaysOverdue() * 0.50; // 0.50 per day
+        return getDaysOverdue() * 0.50;
     }
 }

@@ -4,9 +4,6 @@ import androidx.room.Entity;
 import androidx.room.Ignore;
 import androidx.room.PrimaryKey;
 
-/**
- * Tag entity for organizing books.
- */
 @Entity(tableName = "tags")
 public class Tag {
 
@@ -16,12 +13,16 @@ public class Tag {
     private String name;
     private String color;
     private int usageCount;
+    private int bookCount;
     private long dateAdded;
+    private long lastModified;
     private boolean isSynced;
 
     public Tag() {
         this.dateAdded = System.currentTimeMillis();
+        this.lastModified = System.currentTimeMillis();
         this.usageCount = 0;
+        this.bookCount = 0;
         this.isSynced = false;
     }
 
@@ -31,7 +32,6 @@ public class Tag {
         this.name = name;
     }
 
-    // Getters and Setters
     public long getId() { return id; }
     public void setId(long id) { this.id = id; }
 
@@ -44,30 +44,25 @@ public class Tag {
     public int getUsageCount() { return usageCount; }
     public void setUsageCount(int usageCount) { this.usageCount = usageCount; }
 
+    public int getBookCount() { return bookCount; }
+    public void setBookCount(int bookCount) { this.bookCount = bookCount; }
+
     public long getDateAdded() { return dateAdded; }
     public void setDateAdded(long dateAdded) { this.dateAdded = dateAdded; }
-
-    public boolean isSynced() { return isSynced; }
-    public void setSynced(boolean synced) { isSynced = synced; }
-
-    // Additional fields for service compatibility
-    private long lastModified;
-    private int bookCount;
 
     public long getLastModified() { return lastModified; }
     public void setLastModified(long lastModified) { this.lastModified = lastModified; }
 
-    public int getBookCount() { return bookCount; }
-    public void setBookCount(int bookCount) { this.bookCount = bookCount; }
+    public boolean isSynced() { return isSynced; }
+    public void setSynced(boolean synced) { isSynced = synced; }
 
     public void incrementUsage() {
         this.usageCount++;
+        this.lastModified = System.currentTimeMillis();
     }
 
     @Override
-    public String toString() {
-        return name;
-    }
+    public String toString() { return name; }
 
     @Override
     public boolean equals(Object obj) {

@@ -3,6 +3,7 @@ package com.librelibraria.data.service;
 import com.librelibraria.data.model.Book;
 import com.librelibraria.data.repository.BookRepository;
 
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -10,9 +11,6 @@ import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Single;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 
-/**
- * Service for catalog operations - book management and searching.
- */
 public class CatalogService {
 
     private final BookRepository bookRepository;
@@ -25,9 +23,6 @@ public class CatalogService {
         this.executor = Executors.newSingleThreadExecutor();
     }
 
-    /**
-     * Add a new book to the catalog.
-     */
     public Completable addBook(Book book) {
         return bookRepository.insert(book)
                 .doOnSuccess(id -> {
@@ -37,107 +32,75 @@ public class CatalogService {
                 .ignoreElement();
     }
 
-    /**
-     * Update an existing book.
-     */
     public Completable updateBook(Book book) {
         return bookRepository.update(book)
-                .doOnSuccess(() -> auditService.logBookAction("BOOK_UPDATED", "Book updated: " + book.getTitle(), book.getId()))
-                .ignoreElement();
+                .doOnComplete(() ->
+                        auditService.logBookAction("BOOK_UPDATED", "Book updated: " + book.getTitle(), book.getId()));
     }
 
-    /**
-     * Delete a book.
-     */
     public Completable deleteBook(Book book) {
         return bookRepository.delete(book)
-                .doOnSuccess(() -> auditService.logBookAction("BOOK_DELETED", "Book deleted: " + book.getTitle(), book.getId()))
-                .ignoreElement();
+                .doOnComplete(() ->
+                        auditService.logBookAction("BOOK_DELETED", "Book deleted: " + book.getTitle(), book.getId()));
     }
 
-    /**
-     * Save a book (add or update).
-     */
     public Completable saveBook(Book book, boolean isUpdate) {
-        if (isUpdate) {
-            return updateBook(book);
-        } else {
-            return addBook(book);
-        }
+        return isUpdate ? updateBook(book) : addBook(book);
     }
 
-    /**
-     * Get all books.
-     */
-    public Single<java.util.List<Book>> getAllBooks() {
-        return bookRepository.getAllBooks();
+    /** Returns all books as a Single snapshot. */
+    public Single<List<Book>> getAllBooks() {
+        return bookRepository.getAllBooks()
+                .firstOrError()
+                .subscribeOn(Schedulers.io());
     }
 
-    /**
-     * Load catalog with search and filters.
-     */
-    public Single<java.util.List<Book>> loadCatalog(String searchQuery, String genreFilter, int page, int pageSize) {
-        if (searchQuery == null) searchQuery = "";
+    /** Load catalog with optional search and genre filter. */
+    public Single<List<Book>> loadCatalog(String searchQuery, String genreFilter, int page, int pageSize) {
+        String query = searchQuery != null ? searchQuery : "";
         if (genreFilter == null || genreFilter.isEmpty()) {
-            return bookRepository.searchBooks(searchQuery)
-                    .firstOrError();
+            return bookRepository.searchBooks(query)
+                    .firstOrError()
+                    .subscribeOn(Schedulers.io());
         } else {
-            return bookRepository.searchBooksWithFilters(searchQuery, null, genreFilter)
-                    .firstOrError();
+            return bookRepository.searchBooksWithFilters(query, null, genreFilter)
+                    .subscribeOn(Schedulers.io());
         }
     }
 
-    /**
-     * Search books by title.
-     */
-    public Single<java.util.List<Book>> searchBooks(String query) {
-        return bookRepository.searchBooks(query);
+    /** Search books by title/author/ISBN. */
+    public Single<List<Book>> searchBooks(String query) {
+        return bookRepository.searchBooks(query)
+                .firstOrError()
+                .subscribeOn(Schedulers.io());
     }
 
-    /**
-     * Get book by ID.
-     */
     public Single<Book> getBookById(long bookId) {
         return bookRepository.getBookById(bookId);
     }
 
-    /**
-     * Get books by reading status.
-     */
-    public Single<java.util.List<Book>> getBooksByStatus(String status) {
+    public Single<List<Book>> getBooksByStatus(String status) {
         return bookRepository.getBooksByStatus(status);
     }
 
-    /**
-     * Get available books count.
-     */
     public Single<Integer> getAvailableBooksCount() {
         return bookRepository.getAvailableCount();
     }
 
-    /**
-     * Get total books count.
-     */
     public Single<Integer> getTotalBooksCount() {
         return bookRepository.getTotalCount();
     }
 
-    /**
-     * Update book reading status.
-     */
     public Completable updateBookStatus(long bookId, String newStatus) {
         return bookRepository.getBookById(bookId)
                 .flatMapCompletable(book -> {
-                    book.setReadingStatus(newStatus);
+                    book.setReadingStatus(
+                            com.librelibraria.data.model.ReadingStatus.fromString(newStatus));
                     return bookRepository.update(book);
                 });
     }
 
-    /**
-     * Search books with filters.
-     */
-    public Single<java.util.List<Book>> searchBooksWithFilters(
-            String query, String status, String genre) {
+    public Single<List<Book>> searchBooksWithFilters(String query, String status, String genre) {
         return bookRepository.searchBooksWithFilters(query, status, genre);
     }
 }
