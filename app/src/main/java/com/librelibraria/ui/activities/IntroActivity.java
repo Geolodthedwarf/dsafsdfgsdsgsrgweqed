@@ -48,21 +48,31 @@ public class IntroActivity extends AppCompatActivity {
                             final int flags = result.getData().getFlags()
                                     & (Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
                             try {
+                                // Take persistable permission - this is critical for SAF
                                 getContentResolver().takePersistableUriPermission(treeUri, flags);
-                            } catch (SecurityException ignored) {
-                                // If persistable permission isn't granted (some providers), we still try to proceed.
+                            } catch (SecurityException e) {
+                                // Some providers don't support persistable permissions
+                                // Continue anyway - we might still be able to use the folder temporarily
+                                android.util.Log.w("IntroActivity", "Could not persist URI permission: " + e.getMessage());
                             }
 
-                            if (storageManager.initializeFromSelectedTree(treeUri)) {
+                            // Verify we have write permission before proceeding
+                            boolean hasPermission = (flags & Intent.FLAG_GRANT_WRITE_URI_PERMISSION) != 0;
+                            if (hasPermission && storageManager.initializeFromSelectedTree(treeUri)) {
                                 Toast.makeText(this, R.string.folder_selected, Toast.LENGTH_SHORT).show();
                                 finishIntro();
                             } else {
+                                // Fallback: try to proceed anyway, or use default folder
+                                android.util.Log.w("IntroActivity", "Could not initialize storage from selected folder, using default");
                                 useDefaultFolder();
                             }
                         } else {
+                            android.util.Log.w("IntroActivity", "No URI returned from folder picker");
                             useDefaultFolder();
                         }
                     } else {
+                        // User cancelled or picker returned an error
+                        android.util.Log.i("IntroActivity", "Folder picker cancelled or returned error");
                         useDefaultFolder();
                     }
                 }
@@ -101,43 +111,66 @@ public class IntroActivity extends AppCompatActivity {
         try {
             File baseDir = getFilesDir();
             if (baseDir != null) {
-                String path = baseDir.getAbsolutePath() + "/LibreLibraria";
+                // First, try using internal storage as the base
+                String path = baseDir.getAbsolutePath();
                 storageManager.setBasePath(path);
+                storageManager.setBaseUri(null); // Clear any SAF URI
+
                 boolean created = storageManager.createBaseFolders();
                 if (created) {
                     Toast.makeText(this, R.string.folder_selected, Toast.LENGTH_SHORT).show();
                     finishIntro();
                 } else {
-                    tryDirectCreation(baseDir);
+                    // Try direct creation
+                    boolean success = tryDirectCreation(baseDir);
+                    if (!success) {
+                        tryInternalStorage();
+                    }
                 }
             } else {
-                tryDirectCreation(getFilesDir());
+                tryInternalStorage();
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            android.util.Log.e("IntroActivity", "useDefaultFolder exception: " + e.getMessage(), e);
             tryInternalStorage();
         }
     }
 
-    private void tryDirectCreation(File baseDir) {
+    private boolean tryDirectCreation(File baseDir) {
         try {
+            if (baseDir == null) {
+                android.util.Log.w("IntroActivity", "tryDirectCreation: baseDir is null");
+                return false;
+            }
+
             File libreDir = new File(baseDir, "LibreLibraria");
             if (!libreDir.exists()) {
                 boolean created = libreDir.mkdirs();
                 if (!created) {
                     created = createFolderManually(libreDir);
                 }
+                if (!created) {
+                    android.util.Log.w("IntroActivity", "Could not create LibreLibraria folder at: " + libreDir.getAbsolutePath());
+                    return false;
+                }
             }
-            if (libreDir.exists() || createFolderManually(libreDir)) {
+            if (libreDir.exists() && libreDir.isDirectory()) {
                 storageManager.setBasePath(libreDir.getAbsolutePath());
-                createSubFoldersManually(libreDir);
-                Toast.makeText(this, R.string.folder_selected, Toast.LENGTH_SHORT).show();
-                finishIntro();
-            } else {
-                tryInternalStorage();
+                storageManager.setBaseUri(null); // Clear any SAF URI
+                boolean subFoldersCreated = createSubFoldersManually(libreDir);
+                if (subFoldersCreated) {
+                    android.util.Log.i("IntroActivity", "Created storage at: " + libreDir.getAbsolutePath());
+                    return true;
+                } else {
+                    // Even if subfolders fail, we can still proceed
+                    android.util.Log.w("IntroActivity", "Some subfolders could not be created, but proceeding anyway");
+                    return true;
+                }
             }
+            return false;
         } catch (Exception e) {
-            tryInternalStorage();
+            android.util.Log.e("IntroActivity", "tryDirectCreation exception: " + e.getMessage(), e);
+            return false;
         }
     }
 
@@ -154,8 +187,13 @@ public class IntroActivity extends AppCompatActivity {
         }
     }
 
-    private void createSubFoldersManually(File baseDir) {
+    private boolean createSubFoldersManually(File baseDir) {
+        if (baseDir == null || !baseDir.exists() || !baseDir.isDirectory()) {
+            return false;
+        }
+
         String[] subs = {"books", "loans", "borrowers", "tags", "themes", "library"};
+        boolean allCreated = true;
         for (String sub : subs) {
             File folder = new File(baseDir, sub);
             if (!folder.exists()) {
@@ -163,27 +201,45 @@ public class IntroActivity extends AppCompatActivity {
                 if (!created) {
                     created = folder.mkdir();
                 }
+                if (!created) {
+                    android.util.Log.w("IntroActivity", "Could not create subfolder: " + sub);
+                    allCreated = false;
+                }
             }
         }
+        return allCreated;
     }
 
     private void tryInternalStorage() {
         try {
             File baseDir = getFilesDir();
-            File libreDir = new File(baseDir, "LibreLibraria");
-            createSubFoldersManually(libreDir);
-            storageManager.setBasePath(libreDir.getAbsolutePath());
+            if (baseDir == null) {
+                android.util.Log.e("IntroActivity", "tryInternalStorage: getFilesDir() returned null");
+                // Set a minimal fallback
+                storageManager.setBasePath("/data/data/" + getPackageName() + "/files/LibreLibraria");
+                storageManager.setBaseUri(null);
+            } else {
+                File libreDir = new File(baseDir, "LibreLibraria");
+                createSubFoldersManually(libreDir);
+                storageManager.setBasePath(libreDir.getAbsolutePath());
+                storageManager.setBaseUri(null);
+            }
             Toast.makeText(this, R.string.folder_selected, Toast.LENGTH_SHORT).show();
         } catch (Exception e) {
-            e.printStackTrace();
+            android.util.Log.e("IntroActivity", "tryInternalStorage exception: " + e.getMessage(), e);
             // Best-effort: set a fallback path even if folder creation failed,
             // so we don't trap the user on the intro screen forever.
             try {
                 File fallback = getFilesDir();
                 if (fallback != null) {
-                    storageManager.setBasePath(new File(fallback, "LibreLibraria").getAbsolutePath());
+                    String fallbackPath = new File(fallback, "LibreLibraria").getAbsolutePath();
+                    storageManager.setBasePath(fallbackPath);
+                    storageManager.setBaseUri(null);
+                    android.util.Log.i("IntroActivity", "Using fallback storage path: " + fallbackPath);
                 }
-            } catch (Exception ignored) { }
+            } catch (Exception ignored) {
+                android.util.Log.e("IntroActivity", "Even fallback storage failed", ignored);
+            }
         }
         // Always proceed to the main app — do NOT leave the user stuck here.
         finishIntro();
@@ -194,6 +250,7 @@ public class IntroActivity extends AppCompatActivity {
         intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
         intent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
         intent.addFlags(Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);
+        intent.putExtra("android.content.extra.SHOW_ADVANCED", true);
         folderPickerLauncher.launch(intent);
     }
 

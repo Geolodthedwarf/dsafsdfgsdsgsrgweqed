@@ -133,7 +133,60 @@ public class FileStorageManager {
     }
     
     public boolean isFolderSelected() {
-        return prefs.getString("base_uri", null) != null;
+        return prefs.getString("base_uri", null) != null || prefs.getString("base_path", null) != null;
+    }
+
+    /**
+     * Validates that the stored SAF URI is still accessible.
+     * Returns true if storage is accessible, false if we need to fall back.
+     */
+    public boolean validateStorageAccess() {
+        String baseUri = prefs.getString("base_uri", null);
+        String basePath = getBasePath();
+
+        if (baseUri != null) {
+            try {
+                Uri uri = Uri.parse(baseUri);
+                DocumentFile baseDir = DocumentFile.fromTreeUri(context, uri);
+                if (baseDir != null && baseDir.exists() && baseDir.isDirectory()) {
+                    return true;
+                }
+            } catch (Exception e) {
+                android.util.Log.w("FileStorageManager", "SAF storage validation failed: " + e.getMessage());
+            }
+            // SAF URI is invalid - clear it and fall back to file path
+            android.util.Log.w("FileStorageManager", "SAF URI is no longer accessible, clearing and using file path");
+            clearBaseUri();
+            // Try to ensure we have a valid file path
+            if (basePath == null || basePath.isEmpty()) {
+                // Set default path
+                File defaultDir = context.getFilesDir();
+                if (defaultDir != null) {
+                    setBasePath(new File(defaultDir, BASE_FOLDER).getAbsolutePath());
+                }
+            }
+            return false;
+        }
+
+        // Check if file path is accessible
+        if (basePath != null && !basePath.isEmpty()) {
+            File dir = new File(basePath);
+            if (dir.exists() && dir.isDirectory()) {
+                return true;
+            }
+            // Path doesn't exist - try to create it
+            return createBaseFolders();
+        }
+
+        // No valid storage - return false
+        return false;
+    }
+
+    /**
+     * Clear the stored SAF URI.
+     */
+    public void clearBaseUri() {
+        prefs.edit().remove("base_uri").apply();
     }
     
     public void setBaseUri(String uri) {
@@ -180,60 +233,127 @@ public class FileStorageManager {
      */
     public boolean initializeFromSelectedTree(Uri treeUri) {
         try {
-            if (treeUri == null) return false;
-            DocumentFile picked = DocumentFile.fromTreeUri(context, treeUri);
-            if (picked == null || !picked.exists() || !picked.isDirectory()) return false;
-
-            DocumentFile libre = picked.findFile(BASE_FOLDER);
-            if (libre == null || !libre.isDirectory()) {
-                libre = picked.createDirectory(BASE_FOLDER);
+            if (treeUri == null) {
+                android.util.Log.e("FileStorageManager", "initializeFromSelectedTree: treeUri is null");
+                return false;
             }
-            if (libre == null || !libre.exists() || !libre.isDirectory()) return false;
+
+            // Validate the URI scheme
+            String scheme = treeUri.getScheme();
+            if (scheme == null || !"content".equals(scheme)) {
+                android.util.Log.e("FileStorageManager", "initializeFromSelectedTree: Invalid URI scheme: " + scheme);
+                return false;
+            }
+
+            DocumentFile picked = DocumentFile.fromTreeUri(context, treeUri);
+            if (picked == null) {
+                android.util.Log.e("FileStorageManager", "initializeFromSelectedTree: DocumentFile is null for URI");
+                return false;
+            }
+
+            if (!picked.exists()) {
+                android.util.Log.e("FileStorageManager", "initializeFromSelectedTree: Selected directory does not exist");
+                return false;
+            }
+
+            if (!picked.isDirectory()) {
+                android.util.Log.e("FileStorageManager", "initializeFromSelectedTree: Selected path is not a directory");
+                return false;
+            }
+
+            // Check if LibreLibraria folder exists, create if not
+            DocumentFile libre = picked.findFile(BASE_FOLDER);
+            if (libre == null || !libre.exists() || !libre.isDirectory()) {
+                // Try to create the LibreLibraria folder
+                try {
+                    libre = picked.createDirectory(BASE_FOLDER);
+                } catch (Exception e) {
+                    android.util.Log.e("FileStorageManager", "Failed to create LibreLibraria folder: " + e.getMessage());
+                }
+            }
+
+            if (libre == null || !libre.exists() || !libre.isDirectory()) {
+                android.util.Log.e("FileStorageManager", "initializeFromSelectedTree: Could not create/verify LibreLibraria folder");
+                return false;
+            }
 
             // Persist base URI as the LibreLibraria folder uri.
             setBaseUri(libre.getUri().toString());
             // Best-effort: store a human-friendly "path" label (SAF doesn't provide real filesystem paths).
             setBasePath(BASE_FOLDER);
 
+            // Create required subfolders
             String[] folders = {BOOKS_FOLDER, LOANS_FOLDER, BORROWERS_FOLDER, TAGS_FOLDER, THEMES_FOLDER, LIBRARY_FOLDER};
             for (String folderName : folders) {
-                DocumentFile folder = libre.findFile(folderName);
-                if (folder == null || !folder.exists()) {
-                    folder = libre.createDirectory(folderName);
+                try {
+                    DocumentFile folder = libre.findFile(folderName);
+                    if (folder == null || !folder.exists() || !folder.isDirectory()) {
+                        try {
+                            folder = libre.createDirectory(folderName);
+                        } catch (Exception e) {
+                            android.util.Log.w("FileStorageManager", "Could not create folder " + folderName + ": " + e.getMessage());
+                        }
+                    }
+                    if (folder == null || !folder.exists() || !folder.isDirectory()) {
+                        android.util.Log.w("FileStorageManager", "Folder " + folderName + " not available, will be created on demand");
+                    }
+                } catch (Exception e) {
+                    android.util.Log.w("FileStorageManager", "Error checking folder " + folderName + ": " + e.getMessage());
+                    // Continue with other folders - don't fail completely
                 }
-                if (folder == null || !folder.exists() || !folder.isDirectory()) return false;
             }
 
+            android.util.Log.i("FileStorageManager", "Successfully initialized SAF storage at: " + libre.getUri());
             return true;
         } catch (Exception e) {
-            e.printStackTrace();
+            android.util.Log.e("FileStorageManager", "initializeFromSelectedTree exception: " + e.getMessage(), e);
             return false;
         }
     }
     
     public boolean createBaseFolders() {
-        if (getBasePath() == null || getBasePath().isEmpty()) return false;
-        
+        String basePath = getBasePath();
+        if (basePath == null || basePath.isEmpty()) {
+            android.util.Log.w("FileStorageManager", "createBaseFolders: basePath is null or empty");
+            return false;
+        }
+
         try {
             String baseUri = prefs.getString("base_uri", null);
             if (baseUri != null) {
                 return createFoldersViaDocumentFile(baseUri);
             }
-            
-            File baseDir = new File(getBasePath());
-            
-            boolean allCreated = ensureDirectory(baseDir);
-            
-            allCreated = allCreated && ensureDirectory(new File(getBasePath(), BOOKS_FOLDER));
-            allCreated = allCreated && ensureDirectory(new File(getBasePath(), LOANS_FOLDER));
-            allCreated = allCreated && ensureDirectory(new File(getBasePath(), BORROWERS_FOLDER));
-            allCreated = allCreated && ensureDirectory(new File(getBasePath(), TAGS_FOLDER));
-            allCreated = allCreated && ensureDirectory(new File(getBasePath(), THEMES_FOLDER));
-            allCreated = allCreated && ensureDirectory(new File(getBasePath(), LIBRARY_FOLDER));
-            
-            return checkAllFoldersExist();
+
+            File baseDir = new File(basePath);
+
+            // Ensure base directory exists
+            if (!baseDir.exists()) {
+                boolean created = baseDir.mkdirs();
+                if (!created && !baseDir.exists()) {
+                    android.util.Log.e("FileStorageManager", "Could not create base directory: " + basePath);
+                    return false;
+                }
+            }
+
+            // Create subfolders
+            String[] subFolders = {BOOKS_FOLDER, LOANS_FOLDER, BORROWERS_FOLDER, TAGS_FOLDER, THEMES_FOLDER, LIBRARY_FOLDER};
+            boolean allCreated = true;
+
+            for (String folderName : subFolders) {
+                File subDir = new File(baseDir, folderName);
+                if (!subDir.exists()) {
+                    boolean created = subDir.mkdirs();
+                    if (!created && !subDir.exists()) {
+                        android.util.Log.w("FileStorageManager", "Could not create folder: " + folderName);
+                        allCreated = false;
+                    }
+                }
+            }
+
+            // Return true if at least the base directory exists
+            return baseDir.exists() && baseDir.isDirectory();
         } catch (Exception e) {
-            e.printStackTrace();
+            android.util.Log.e("FileStorageManager", "createBaseFolders exception: " + e.getMessage(), e);
             return false;
         }
     }
@@ -249,21 +369,55 @@ public class FileStorageManager {
     
     private boolean createFoldersViaDocumentFile(String uriStr) {
         try {
+            if (uriStr == null || uriStr.isEmpty()) {
+                android.util.Log.w("FileStorageManager", "createFoldersViaDocumentFile: uriStr is null or empty");
+                return false;
+            }
+
             Uri uri = Uri.parse(uriStr);
             DocumentFile baseDir = DocumentFile.fromTreeUri(context, uri);
-            if (baseDir == null || !baseDir.exists()) return false;
-            
+
+            if (baseDir == null) {
+                android.util.Log.e("FileStorageManager", "createFoldersViaDocumentFile: DocumentFile is null");
+                return false;
+            }
+
+            if (!baseDir.exists()) {
+                android.util.Log.e("FileStorageManager", "createFoldersViaDocumentFile: Directory does not exist");
+                return false;
+            }
+
+            if (!baseDir.isDirectory()) {
+                android.util.Log.e("FileStorageManager", "createFoldersViaDocumentFile: Not a directory");
+                return false;
+            }
+
             String[] folders = {BOOKS_FOLDER, LOANS_FOLDER, BORROWERS_FOLDER, TAGS_FOLDER, THEMES_FOLDER, LIBRARY_FOLDER};
+            boolean allCreated = true;
+
             for (String folderName : folders) {
-                DocumentFile folder = baseDir.findFile(folderName);
-                if (folder == null || !folder.exists()) {
-                    folder = baseDir.createDirectory(folderName);
-                    if (folder == null) return false;
+                try {
+                    DocumentFile folder = baseDir.findFile(folderName);
+                    if (folder == null || !folder.exists() || !folder.isDirectory()) {
+                        try {
+                            folder = baseDir.createDirectory(folderName);
+                        } catch (Exception e) {
+                            android.util.Log.w("FileStorageManager", "Could not create folder " + folderName + ": " + e.getMessage());
+                        }
+                    }
+                    if (folder == null || !folder.exists() || !folder.isDirectory()) {
+                        android.util.Log.w("FileStorageManager", "Folder " + folderName + " not available");
+                        allCreated = false;
+                    }
+                } catch (Exception e) {
+                    android.util.Log.w("FileStorageManager", "Error creating folder " + folderName + ": " + e.getMessage());
+                    allCreated = false;
                 }
             }
-            return true;
+
+            return baseDir.exists() && baseDir.isDirectory();
         } catch (Exception e) {
-            e.printStackTrace();
+            android.util.Log.e("FileStorageManager", "createFoldersViaDocumentFile exception: " + e.getMessage(), e);
             return false;
         }
     }
