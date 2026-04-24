@@ -22,60 +22,60 @@ import com.librelibraria.ui.util.AppAnimations;
 import java.io.File;
 
 public class IntroActivity extends AppCompatActivity {
-    
+
     private ViewPager2 viewPager;
     private LinearLayout indicatorLayout;
     private MaterialButton btnSkip, btnNext;
     private IntroPagerAdapter adapter;
     private int currentPage = 0;
-    
+
     private FileStorageManager storageManager;
     private ActivityResultLauncher<Intent> folderPickerLauncher;
-    
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_intro);
-        
-        storageManager = FileStorageManager.getInstance(this);
-        
-        folderPickerLauncher = registerForActivityResult(
-            new ActivityResultContracts.StartActivityForResult(),
-            result -> {
-                if (result.getResultCode() == RESULT_OK && result.getData() != null) {
-                    Uri treeUri = result.getData().getData();
-                    if (treeUri != null) {
-                        final int flags = result.getData().getFlags()
-                                & (Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
-                        try {
-                            getContentResolver().takePersistableUriPermission(treeUri, flags);
-                        } catch (SecurityException ignored) {
-                            // If persistable permission isn't granted (some providers), we still try to proceed.
-                        }
 
-                        if (storageManager.initializeFromSelectedTree(treeUri)) {
-                            Toast.makeText(this, R.string.folder_selected, Toast.LENGTH_SHORT).show();
-                            finishIntro();
+        storageManager = FileStorageManager.getInstance(this);
+
+        folderPickerLauncher = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                result -> {
+                    if (result.getResultCode() == RESULT_OK && result.getData() != null) {
+                        Uri treeUri = result.getData().getData();
+                        if (treeUri != null) {
+                            final int flags = result.getData().getFlags()
+                                    & (Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+                            try {
+                                getContentResolver().takePersistableUriPermission(treeUri, flags);
+                            } catch (SecurityException ignored) {
+                                // If persistable permission isn't granted (some providers), we still try to proceed.
+                            }
+
+                            if (storageManager.initializeFromSelectedTree(treeUri)) {
+                                Toast.makeText(this, R.string.folder_selected, Toast.LENGTH_SHORT).show();
+                                finishIntro();
+                            } else {
+                                useDefaultFolder();
+                            }
                         } else {
                             useDefaultFolder();
                         }
                     } else {
                         useDefaultFolder();
                     }
-                } else {
-                    useDefaultFolder();
                 }
-            }
         );
-        
+
         initViews();
         setupViewPager();
         setupButtons();
     }
-    
+
     private String getPathFromUri(Uri uri) {
         if (uri == null) return null;
-        
+
         if ("content".equals(uri.getScheme())) {
             try {
                 android.database.Cursor cursor = getContentResolver().query(uri, null, null, null, null);
@@ -93,10 +93,10 @@ public class IntroActivity extends AppCompatActivity {
                 e.printStackTrace();
             }
         }
-        
+
         return uri.getPath();
     }
-    
+
     private void useDefaultFolder() {
         try {
             File baseDir = getFilesDir();
@@ -118,7 +118,7 @@ public class IntroActivity extends AppCompatActivity {
             tryInternalStorage();
         }
     }
-    
+
     private void tryDirectCreation(File baseDir) {
         try {
             File libreDir = new File(baseDir, "LibreLibraria");
@@ -140,7 +140,7 @@ public class IntroActivity extends AppCompatActivity {
             tryInternalStorage();
         }
     }
-    
+
     private boolean createFolderManually(File folder) {
         try {
             if (folder.exists()) return true;
@@ -153,7 +153,7 @@ public class IntroActivity extends AppCompatActivity {
             return false;
         }
     }
-    
+
     private void createSubFoldersManually(File baseDir) {
         String[] subs = {"books", "loans", "borrowers", "tags", "themes", "library"};
         for (String sub : subs) {
@@ -166,7 +166,7 @@ public class IntroActivity extends AppCompatActivity {
             }
         }
     }
-    
+
     private void tryInternalStorage() {
         try {
             File baseDir = getFilesDir();
@@ -174,13 +174,21 @@ public class IntroActivity extends AppCompatActivity {
             createSubFoldersManually(libreDir);
             storageManager.setBasePath(libreDir.getAbsolutePath());
             Toast.makeText(this, R.string.folder_selected, Toast.LENGTH_SHORT).show();
-            finishIntro();
         } catch (Exception e) {
             e.printStackTrace();
-            Toast.makeText(this, R.string.error_creating_folders, Toast.LENGTH_SHORT).show();
+            // Best-effort: set a fallback path even if folder creation failed,
+            // so we don't trap the user on the intro screen forever.
+            try {
+                File fallback = getFilesDir();
+                if (fallback != null) {
+                    storageManager.setBasePath(new File(fallback, "LibreLibraria").getAbsolutePath());
+                }
+            } catch (Exception ignored) { }
         }
+        // Always proceed to the main app — do NOT leave the user stuck here.
+        finishIntro();
     }
-    
+
     private void showFolderSelection() {
         Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
         intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
@@ -188,16 +196,16 @@ public class IntroActivity extends AppCompatActivity {
         intent.addFlags(Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);
         folderPickerLauncher.launch(intent);
     }
-    
+
     private void initViews() {
         viewPager = findViewById(R.id.viewpager);
         indicatorLayout = findViewById(R.id.indicator_layout);
         btnSkip = findViewById(R.id.btn_skip);
         btnNext = findViewById(R.id.btn_next);
-        
+
         adapter = new IntroPagerAdapter(IntroPage.getPages());
         viewPager.setAdapter(adapter);
-        
+
         viewPager.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
             @Override
             public void onPageSelected(int position) {
@@ -207,11 +215,11 @@ public class IntroActivity extends AppCompatActivity {
             }
         });
     }
-    
+
     private void setupViewPager() {
         int pageCount = adapter.getItemCount();
         indicatorLayout.removeAllViews();
-        
+
         for (int i = 0; i < pageCount; i++) {
             View indicator = new View(this);
             int size = (int) (8 * getResources().getDisplayMetrics().density);
@@ -222,15 +230,15 @@ public class IntroActivity extends AppCompatActivity {
         }
         updateIndicator();
     }
-    
+
     private void updateIndicator() {
         for (int i = 0; i < indicatorLayout.getChildCount(); i++) {
             View child = indicatorLayout.getChildAt(i);
-            child.setBackgroundResource(i == currentPage ? 
-                R.drawable.indicator_active : R.drawable.indicator_inactive);
+            child.setBackgroundResource(i == currentPage ?
+                    R.drawable.indicator_active : R.drawable.indicator_inactive);
         }
     }
-    
+
     private void updateButtons() {
         if (currentPage == adapter.getItemCount() - 1) {
             btnNext.setText(R.string.finish);
@@ -240,27 +248,37 @@ public class IntroActivity extends AppCompatActivity {
             btnSkip.setVisibility(View.VISIBLE);
         }
     }
-    
+
     private void setupButtons() {
         btnNext.setOnClickListener(v -> {
             if (currentPage == adapter.getItemCount() - 1) {
-                showFolderSelection();
+                showFolderExplanationDialog();
             } else {
                 viewPager.setCurrentItem(currentPage + 1, true);
             }
         });
-        
-        btnSkip.setOnClickListener(v -> showFolderSelection());
+
+        btnSkip.setOnClickListener(v -> showFolderExplanationDialog());
     }
-    
+
+    private void showFolderExplanationDialog() {
+        new MaterialAlertDialogBuilder(this)
+                .setTitle(R.string.app_name)
+                .setMessage("Choose where to store your library data.\n\nYou can pick a custom folder (recommended) so your books are saved to a location of your choice, or skip to use the app's private internal storage.")
+                .setPositiveButton("Choose folder", (d, w) -> showFolderSelection())
+                .setNegativeButton("Use default", (d, w) -> useDefaultFolder())
+                .setCancelable(false)
+                .show();
+    }
+
     private void finishIntro() {
         getSharedPreferences("app_prefs", MODE_PRIVATE)
-            .edit().putBoolean("intro_completed", true).apply();
-        
+                .edit().putBoolean("intro_completed", true).apply();
+
         startActivity(new Intent(this, MainActivity.class));
         finish();
     }
-    
+
     @Override
     protected void onResume() {
         super.onResume();
