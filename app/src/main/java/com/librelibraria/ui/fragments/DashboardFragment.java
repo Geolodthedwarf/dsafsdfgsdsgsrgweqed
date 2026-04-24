@@ -134,8 +134,8 @@ public class DashboardFragment extends Fragment implements BookAdapter.OnBookCli
                     try {
                         if (stats != null) {
                             if (tvTotalBooks != null) tvTotalBooks.setText(String.valueOf(stats.getTotalBooks()));
-                            if (tvActiveLoans != null) tvActiveLoans.setText(String.valueOf(stats.getBorrowedBooks()));
-                            if (tvTotalBorrowers != null) tvTotalBorrowers.setText(String.valueOf(stats.getAvailableBooks()));
+                            if (tvActiveLoans != null) tvActiveLoans.setText(String.valueOf(stats.getActiveLoans()));
+                            if (tvTotalBorrowers != null) tvTotalBorrowers.setText(String.valueOf(stats.getTotalBorrowers()));
                             if (tvOverdueBooks != null) tvOverdueBooks.setText(String.valueOf(stats.getOverdueBooks()));
                         }
                         if (swipeRefresh != null) swipeRefresh.setRefreshing(false);

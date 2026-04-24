@@ -197,7 +197,7 @@ public class LendingFragment extends Fragment implements LoanAdapter.OnLoanClick
 
             // Set default due date (14 days from now)
             final long[] defaultDueDate = {Calendar.getInstance().getTimeInMillis() + 14L * 24 * 60 * 60 * 1000};
-            etDueDate.setText(dateFormat.format(Calendar.getInstance().getTime()));
+            etDueDate.setText(dateFormat.format(new java.util.Date(defaultDueDate[0])));
 
             // Due date picker
             etDueDate.setOnClickListener(v -> {

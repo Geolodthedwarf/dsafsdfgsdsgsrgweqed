@@ -13,6 +13,7 @@ import com.librelibraria.R;
 import com.librelibraria.data.model.Book;
 import com.librelibraria.data.model.Tag;
 import com.librelibraria.data.service.CatalogService;
+import com.librelibraria.data.service.HybridLibraryService;
 import com.librelibraria.data.service.TagService;
 
 import java.util.ArrayList;
@@ -21,6 +22,7 @@ import java.util.List;
 
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
+import io.reactivex.rxjava3.disposables.Disposable;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 
 /**
@@ -30,6 +32,7 @@ public class AddEditBookViewModel extends AndroidViewModel {
 
     private final CatalogService catalogService;
     private final TagService tagService;
+    private final HybridLibraryService hybridLibraryService;
     private final CompositeDisposable disposables;
 
     private final MutableLiveData<Book> book = new MutableLiveData<>();
@@ -47,6 +50,7 @@ public class AddEditBookViewModel extends AndroidViewModel {
         LibreLibrariaApp app = (LibreLibrariaApp) application;
         catalogService = app.getCatalogService();
         tagService = app.getTagService();
+        hybridLibraryService = app.getHybridLibraryService();
         disposables = new CompositeDisposable();
 
         loadGenresAndTags();
@@ -87,7 +91,7 @@ public class AddEditBookViewModel extends AndroidViewModel {
     public void loadBook(long bookId) {
         isLoading.setValue(true);
         disposables.add(
-            catalogService.getBookById(bookId)
+            appBookRepo().getBookById(bookId)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(
@@ -105,6 +109,11 @@ public class AddEditBookViewModel extends AndroidViewModel {
                     }
                 )
         );
+    }
+
+    private com.librelibraria.data.repository.BookRepository appBookRepo() {
+        LibreLibrariaApp app = (LibreLibrariaApp) getApplication();
+        return app.getBookRepository();
     }
 
     public LiveData<String> getLookupError() {
@@ -137,22 +146,22 @@ public class AddEditBookViewModel extends AndroidViewModel {
 
     public void saveBook(Book bookToSave) {
         isLoading.setValue(true);
-        disposables.add(
-            catalogService.saveBook(bookToSave, book.getValue() != null)
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(
-                    () -> {
-                        isLoading.setValue(false);
-                        saveSuccess.setValue(true);
-                    },
-                    error -> {
-                        android.util.Log.e("AddEditBookVM", "Error saving book", error);
-                        isLoading.setValue(false);
-                        saveSuccess.setValue(false);
-                    }
-                )
-        );
+        Disposable d = hybridLibraryService.saveBook(bookToSave)
+            .ignoreElement()
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe(
+                () -> {
+                    isLoading.setValue(false);
+                    saveSuccess.setValue(true);
+                },
+                error -> {
+                    android.util.Log.e("AddEditBookVM", "Error saving book", error);
+                    isLoading.setValue(false);
+                    saveSuccess.setValue(false);
+                }
+            );
+        disposables.add(d);
     }
 
     public void searchByIsbn(String isbn) {

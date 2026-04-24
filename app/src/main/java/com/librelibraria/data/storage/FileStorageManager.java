@@ -31,6 +31,87 @@ public class FileStorageManager {
     private static final String TAGS_FOLDER = "tags";
     private static final String THEMES_FOLDER = "themes";
     private static final String LIBRARY_FOLDER = "library";
+
+    public enum ImportMode {
+        OVERWRITE,
+        SKIP,
+        CREATE_NEW
+    }
+
+    public boolean deleteBorrowerById(long borrowerId) {
+        try {
+            String baseUri = prefs.getString("base_uri", null);
+            if (baseUri != null) {
+                Uri uri = Uri.parse(baseUri);
+                DocumentFile baseDir = DocumentFile.fromTreeUri(context, uri);
+                if (baseDir == null) return false;
+
+                DocumentFile dir = baseDir.findFile(BORROWERS_FOLDER);
+                if (dir == null || !dir.isDirectory()) return false;
+
+                DocumentFile match = findJsonDocFileById(dir, ".bcbr", borrowerId);
+                if (match != null) match.delete();
+                return true;
+            }
+
+            File dir = new File(getBasePath(), BORROWERS_FOLDER);
+            File match = findJsonFileById(dir, ".bcbr", borrowerId);
+            if (match != null) match.delete();
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    public boolean deleteLoansForBook(long bookId) {
+        try {
+            String baseUri = prefs.getString("base_uri", null);
+            if (baseUri != null) {
+                DocumentFile baseDir = DocumentFile.fromTreeUri(context, Uri.parse(baseUri));
+                if (baseDir == null) return false;
+
+                DocumentFile loansDir = baseDir.findFile(LOANS_FOLDER);
+                if (loansDir == null || !loansDir.isDirectory()) return false;
+
+                for (DocumentFile f : loansDir.listFiles()) {
+                    String name = f.getName();
+                    if (name == null || !name.endsWith(".bclo")) continue;
+                    try (InputStream in = context.getContentResolver().openInputStream(f.getUri())) {
+                        if (in == null) continue;
+                        BufferedReader r = new BufferedReader(new InputStreamReader(in));
+                        StringBuilder sb = new StringBuilder();
+                        String line;
+                        while ((line = r.readLine()) != null) sb.append(line);
+                        JSONObject obj = new JSONObject(sb.toString());
+                        if (obj.optLong("bookId", -1) == bookId) {
+                            f.delete();
+                        }
+                    } catch (Exception ignored) {
+                    }
+                }
+                return true;
+            }
+
+            File dir = new File(getBasePath(), LOANS_FOLDER);
+            File[] files = dir.listFiles((d, name) -> name != null && name.endsWith(".bclo"));
+            if (files == null) return true;
+            for (File f : files) {
+                try (BufferedReader r = new BufferedReader(new FileReader(f))) {
+                    StringBuilder sb = new StringBuilder();
+                    String line;
+                    while ((line = r.readLine()) != null) sb.append(line);
+                    JSONObject obj = new JSONObject(sb.toString());
+                    if (obj.optLong("bookId", -1) == bookId) {
+                        f.delete();
+                    }
+                } catch (Exception ignored) {
+                }
+            }
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
     
     private static FileStorageManager instance;
     private Context context;
@@ -82,10 +163,48 @@ public class FileStorageManager {
             }
             
             if (libreFolder != null && libreFolder.exists()) {
-                setBaseUri(treeUri.toString());
+                // Store the LibreLibraria folder itself as the base URI.
+                setBaseUri(libreFolder.getUri().toString());
                 return true;
             }
             return false;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    /**
+     * Initialize storage using a user-selected SAF tree Uri.
+     * Creates a LibreLibraria folder + required subfolders, and persists the base URI.
+     */
+    public boolean initializeFromSelectedTree(Uri treeUri) {
+        try {
+            if (treeUri == null) return false;
+            DocumentFile picked = DocumentFile.fromTreeUri(context, treeUri);
+            if (picked == null || !picked.exists() || !picked.isDirectory()) return false;
+
+            DocumentFile libre = picked.findFile(BASE_FOLDER);
+            if (libre == null || !libre.isDirectory()) {
+                libre = picked.createDirectory(BASE_FOLDER);
+            }
+            if (libre == null || !libre.exists() || !libre.isDirectory()) return false;
+
+            // Persist base URI as the LibreLibraria folder uri.
+            setBaseUri(libre.getUri().toString());
+            // Best-effort: store a human-friendly "path" label (SAF doesn't provide real filesystem paths).
+            setBasePath(BASE_FOLDER);
+
+            String[] folders = {BOOKS_FOLDER, LOANS_FOLDER, BORROWERS_FOLDER, TAGS_FOLDER, THEMES_FOLDER, LIBRARY_FOLDER};
+            for (String folderName : folders) {
+                DocumentFile folder = libre.findFile(folderName);
+                if (folder == null || !folder.exists()) {
+                    folder = libre.createDirectory(folderName);
+                }
+                if (folder == null || !folder.exists() || !folder.isDirectory()) return false;
+            }
+
+            return true;
         } catch (Exception e) {
             e.printStackTrace();
             return false;
@@ -172,25 +291,66 @@ public class FileStorageManager {
         String random = String.format("%04X", new Random().nextInt(65536));
         return type + "_" + dateTime + "_" + random + "." + extension;
     }
-    
-    private String bookIdToFileName(long id, boolean isNew) {
-        if (isNew || id <= 0) {
-            return generateFileName("book", "bcb");
+
+    private long ensureId(long id) {
+        return id > 0 ? id : System.currentTimeMillis();
+    }
+
+    private File findJsonFileById(File dir, String extension, long id) {
+        if (dir == null || !dir.exists() || !dir.isDirectory()) return null;
+        File[] files = dir.listFiles((d, name) -> name != null && name.endsWith(extension));
+        if (files == null) return null;
+
+        for (File f : files) {
+            try (BufferedReader r = new BufferedReader(new FileReader(f))) {
+                StringBuilder sb = new StringBuilder();
+                String line;
+                while ((line = r.readLine()) != null) sb.append(line);
+                JSONObject obj = new JSONObject(sb.toString());
+                if (obj.optLong("id", -1) == id) return f;
+            } catch (Exception ignored) {
+            }
         }
-return "book_" + id + ".bcb";
+        return null;
+    }
+
+    private DocumentFile findJsonDocFileById(DocumentFile dir, String extension, long id) {
+        if (dir == null || !dir.exists() || !dir.isDirectory()) return null;
+        for (DocumentFile f : dir.listFiles()) {
+            try {
+                String name = f.getName();
+                if (name == null || !name.endsWith(extension)) continue;
+                try (InputStream in = context.getContentResolver().openInputStream(f.getUri())) {
+                    if (in == null) continue;
+                    BufferedReader r = new BufferedReader(new InputStreamReader(in));
+                    StringBuilder sb = new StringBuilder();
+                    String line;
+                    while ((line = r.readLine()) != null) sb.append(line);
+                    JSONObject obj = new JSONObject(sb.toString());
+                    if (obj.optLong("id", -1) == id) return f;
+                }
+            } catch (Exception ignored) {
+            }
+        }
+        return null;
     }
     
     // Loan operations
     public boolean saveBook(Book book) {
         try {
+            book.setId(ensureId(book.getId()));
             String baseUri = prefs.getString("base_uri", null);
             if (baseUri != null) {
                 return saveBookViaDocumentFile(book, baseUri);
             }
             
             JSONObject json = bookToJson(book);
-            String fileName = generateFileName("book", "bcb");
-            File file = new File(new File(getBasePath(), BOOKS_FOLDER), fileName);
+            File booksDir = new File(getBasePath(), BOOKS_FOLDER);
+            File file = findJsonFileById(booksDir, ".bcb", book.getId());
+            if (file == null) {
+                String fileName = generateFileName("book", "bcb");
+                file = new File(booksDir, fileName);
+            }
             
             FileWriter writer = new FileWriter(file);
             writer.write(json.toString(2));
@@ -215,13 +375,9 @@ return "book_" + id + ".bcb";
             if (booksDir == null) return false;
             
             JSONObject json = bookToJson(book);
-            String fileName = generateFileName("book", "bcb");
-            if (!fileName.endsWith(".bcb")) {
-                fileName = generateFileName("book", "bcb");
-            }
-            
-            DocumentFile bookFile = booksDir.findFile(fileName);
+            DocumentFile bookFile = findJsonDocFileById(booksDir, ".bcb", book.getId());
             if (bookFile == null) {
+                String fileName = generateFileName("book", "bcb");
                 bookFile = booksDir.createFile("application/octet-stream", fileName);
             }
             if (bookFile == null) return false;
@@ -316,16 +472,22 @@ return "book_" + id + ".bcb";
     
     public boolean deleteBook(String bookId) {
         try {
+            long id = -1;
+            try { id = Long.parseLong(bookId); } catch (Exception ignored) {}
+
             String baseUri = prefs.getString("base_uri", null);
             if (baseUri != null) {
                 return deleteBookViaDocumentFile(bookId, baseUri);
             }
             
             File booksDir = new File(getBasePath(), BOOKS_FOLDER);
-            File[] files = booksDir.listFiles((dir, name) -> name.contains(bookId));
-            if (files != null) {
-                for (File f : files) {
-                    f.delete();
+            if (id > 0) {
+                File match = findJsonFileById(booksDir, ".bcb", id);
+                if (match != null) match.delete();
+            } else {
+                File[] files = booksDir.listFiles((dir, name) -> name != null && name.contains(bookId));
+                if (files != null) {
+                    for (File f : files) f.delete();
                 }
             }
             return true;
@@ -336,16 +498,22 @@ return "book_" + id + ".bcb";
     
     private boolean deleteBookViaDocumentFile(String bookId, String uriStr) {
         try {
+            long id = -1;
+            try { id = Long.parseLong(bookId); } catch (Exception ignored) {}
+
             Uri uri = Uri.parse(uriStr);
             DocumentFile baseDir = DocumentFile.fromTreeUri(context, uri);
             if (baseDir == null) return false;
             
             DocumentFile booksDir = baseDir.findFile(BOOKS_FOLDER);
             if (booksDir == null || !booksDir.isDirectory()) return false;
-            
-            for (DocumentFile file : booksDir.listFiles()) {
-                if (file.getName() != null && file.getName().contains(bookId)) {
-                    file.delete();
+
+            if (id > 0) {
+                DocumentFile match = findJsonDocFileById(booksDir, ".bcb", id);
+                if (match != null) match.delete();
+            } else {
+                for (DocumentFile file : booksDir.listFiles()) {
+                    if (file.getName() != null && file.getName().contains(bookId)) file.delete();
                 }
             }
             return true;
@@ -358,19 +526,16 @@ return "book_" + id + ".bcb";
     // Borrower operations
     public boolean saveBorrower(Borrower borrower) {
         try {
+            borrower.setId(ensureId(borrower.getId()));
             String baseUri = prefs.getString("base_uri", null);
             if (baseUri != null) {
                 return saveBorrowerViaDocumentFile(borrower, baseUri);
             }
             
             JSONObject json = borrowerToJson(borrower);
-            String fileName = generateFileName("borrower", "bcbr");
-            File file = new File(new File(getBasePath(), BORROWERS_FOLDER), fileName);
-            
-            if (!file.getName().endsWith(".bcbr")) {
-                file = new File(new File(getBasePath(), BORROWERS_FOLDER), 
-                    generateFileName("borrower", "bcbr"));
-            }
+            File dir = new File(getBasePath(), BORROWERS_FOLDER);
+            File file = findJsonFileById(dir, ".bcbr", borrower.getId());
+            if (file == null) file = new File(dir, generateFileName("borrower", "bcbr"));
             
             FileWriter writer = new FileWriter(file);
             writer.write(json.toString(2));
@@ -395,14 +560,9 @@ return "book_" + id + ".bcb";
             if (dir == null) return false;
             
             JSONObject json = borrowerToJson(borrower);
-            String fileName = generateFileName("borrower", "bcbr");
-            if (!fileName.endsWith(".bcbr")) {
-                fileName = generateFileName("borrower", "bcbr");
-            }
-            
-            DocumentFile file = dir.findFile(fileName);
+            DocumentFile file = findJsonDocFileById(dir, ".bcbr", borrower.getId());
             if (file == null) {
-                file = dir.createFile("application/octet-stream", fileName);
+                file = dir.createFile("application/octet-stream", generateFileName("borrower", "bcbr"));
             }
             if (file == null) return false;
             
@@ -431,14 +591,10 @@ return "book_" + id + ".bcb";
             if (dir == null) return false;
             
             JSONObject json = loanToJson(loan);
-            String fileName = loan.getId() > 0 ? "loan_" + loan.getId() + ".bclo" : generateFileName("loan", "bclo");
-            if (!fileName.endsWith(".bclo")) {
-                fileName = generateFileName("loan", "bclo");
-            }
-            
-            DocumentFile file = dir.findFile(fileName);
+            loan.setId(ensureId(loan.getId()));
+            DocumentFile file = findJsonDocFileById(dir, ".bclo", loan.getId());
             if (file == null) {
-                file = dir.createFile("application/octet-stream", fileName);
+                file = dir.createFile("application/octet-stream", generateFileName("loan", "bclo"));
             }
             if (file == null) return false;
             
@@ -490,14 +646,11 @@ return "book_" + id + ".bcb";
                 return saveLoanViaDocumentFile(loan, baseUri);
             }
             
+            loan.setId(ensureId(loan.getId()));
             JSONObject json = loanToJson(loan);
-            String fileName = loan.getId() > 0 ? "loan_" + loan.getId() + ".bclo" : generateFileName("loan", "bclo");
-            File file = new File(new File(getBasePath(), LOANS_FOLDER), fileName);
-            
-            if (!file.getName().endsWith(".bclo")) {
-                file = new File(new File(getBasePath(), LOANS_FOLDER), 
-                    generateFileName("loan", "bclo"));
-            }
+            File dir = new File(getBasePath(), LOANS_FOLDER);
+            File file = findJsonFileById(dir, ".bclo", loan.getId());
+            if (file == null) file = new File(dir, generateFileName("loan", "bclo"));
             
             FileWriter writer = new FileWriter(file);
             writer.write(json.toString(2));
@@ -542,14 +695,11 @@ return "book_" + id + ".bcb";
                 return saveTagViaDocumentFile(tag, baseUri);
             }
             
+            tag.setId(ensureId(tag.getId()));
             JSONObject json = tagToJson(tag);
-            String fileName = tag.getId() > 0 ? "tag_" + tag.getId() + ".bct" : generateFileName("tag", "bct");
-            File file = new File(new File(getBasePath(), TAGS_FOLDER), fileName);
-            
-            if (!file.getName().endsWith(".bct")) {
-                file = new File(new File(getBasePath(), TAGS_FOLDER), 
-                    generateFileName("tag", "bct"));
-            }
+            File dir = new File(getBasePath(), TAGS_FOLDER);
+            File file = findJsonFileById(dir, ".bct", tag.getId());
+            if (file == null) file = new File(dir, generateFileName("tag", "bct"));
             
             FileWriter writer = new FileWriter(file);
             writer.write(json.toString(2));
@@ -570,15 +720,11 @@ return "book_" + id + ".bcb";
             }
             if (dir == null) return false;
             
+            tag.setId(ensureId(tag.getId()));
             JSONObject json = tagToJson(tag);
-            String fileName = tag.getId() > 0 ? "tag_" + tag.getId() + ".bct" : generateFileName("tag", "bct");
-            if (!fileName.endsWith(".bct")) {
-                fileName = generateFileName("tag", "bct");
-            }
-            
-            DocumentFile file = dir.findFile(fileName);
+            DocumentFile file = findJsonDocFileById(dir, ".bct", tag.getId());
             if (file == null) {
-                file = dir.createFile("application/octet-stream", fileName);
+                file = dir.createFile("application/octet-stream", generateFileName("tag", "bct"));
             }
             if (file == null) return false;
             
@@ -622,24 +768,98 @@ return "book_" + id + ".bcb";
     // BCL Export (ZIP archive)
     public boolean exportToBCL(String fileName) {
         try {
+            String timestamp = DATE_FORMAT.format(new Date()); // yyyyMMdd_HHmmss
+            String fullName = "LibreLibraria_Export_" + timestamp + ".bcl";
+
+            String baseUri = prefs.getString("base_uri", null);
+            if (baseUri != null) {
+                // SAF mode: write into /LibreLibraria/library/
+                DocumentFile baseDir = DocumentFile.fromTreeUri(context, Uri.parse(baseUri));
+                if (baseDir == null || !baseDir.exists() || !baseDir.isDirectory()) return false;
+
+                DocumentFile libraryDir = baseDir.findFile(LIBRARY_FOLDER);
+                if (libraryDir == null || !libraryDir.isDirectory()) {
+                    libraryDir = baseDir.createDirectory(LIBRARY_FOLDER);
+                }
+                if (libraryDir == null || !libraryDir.exists() || !libraryDir.isDirectory()) return false;
+
+                DocumentFile zipDoc = libraryDir.createFile("application/octet-stream", fullName);
+                if (zipDoc == null) return false;
+
+                try (OutputStream out = context.getContentResolver().openOutputStream(zipDoc.getUri())) {
+                    if (out == null) return false;
+                    exportToBCL(out);
+                }
+                return true;
+            }
+
+            // File API mode: write into /LibreLibraria/library/
             File baseDir = new File(getBasePath());
             File exportDir = new File(baseDir, LIBRARY_FOLDER);
             if (!exportDir.exists()) exportDir.mkdirs();
-            
-            String timestamp = DATE_FORMAT.format(new Date());
-            String random = String.format("%04d", new Random().nextInt(10000));
-            String fullName = "bcl" + timestamp + random + ".bcl";
+
             File zipFile = new File(exportDir, fullName);
-            
-            ZipOutputStream zos = new ZipOutputStream(new FileOutputStream(zipFile));
-            addFolderToZip(zos, baseDir, baseDir);
-            zos.close();
-            
-            return true;
+            try (OutputStream out = new FileOutputStream(zipFile)) {
+                exportToBCL(out);
+            }
+            return zipFile.exists();
         } catch (Exception e) {
             e.printStackTrace();
             return false;
         }
+    }
+
+    /**
+     * Write a BCL (zip) of the entire LibreLibraria folder to the provided stream.
+     * Uses SAF traversal when base_uri is set; otherwise uses File API traversal.
+     */
+    public void exportToBCL(OutputStream out) throws IOException {
+        String baseUri = prefs.getString("base_uri", null);
+        try (ZipOutputStream zos = new ZipOutputStream(out)) {
+            if (baseUri != null) {
+                DocumentFile baseDir = DocumentFile.fromTreeUri(context, Uri.parse(baseUri));
+                if (baseDir != null) {
+                    addDocumentFolderToZip(zos, baseDir, "");
+                }
+            } else {
+                File baseDir = new File(getBasePath());
+                addFolderToZip(zos, baseDir, baseDir);
+            }
+        }
+    }
+
+    private void addDocumentFolderToZip(ZipOutputStream zos, DocumentFile node, String relativePath) throws IOException {
+        if (node == null) return;
+
+        if (node.isDirectory()) {
+            String nextBase = relativePath;
+            if (node.getName() != null && !node.getName().isEmpty()) {
+                if (!relativePath.isEmpty()) nextBase = relativePath + "/" + node.getName();
+                else nextBase = node.getName();
+            }
+            for (DocumentFile child : node.listFiles()) {
+                addDocumentFolderToZip(zos, child, nextBase);
+            }
+            return;
+        }
+
+        String name = node.getName();
+        if (name == null || name.isEmpty()) return;
+
+        String entryName = relativePath.isEmpty() ? name : (relativePath + "/" + name);
+        ZipEntry entry = new ZipEntry(entryName);
+        zos.putNextEntry(entry);
+
+        try (InputStream in = context.getContentResolver().openInputStream(node.getUri())) {
+            if (in != null) {
+                byte[] buffer = new byte[4096];
+                int len;
+                while ((len = in.read(buffer)) > 0) {
+                    zos.write(buffer, 0, len);
+                }
+            }
+        }
+        zos.closeEntry();
     }
     
     private void addFolderToZip(ZipOutputStream zos, File sourceFile, File baseDir) throws IOException {
@@ -664,6 +884,207 @@ return "book_" + id + ".bcb";
             fis.close();
             zos.closeEntry();
         }
+    }
+
+    public int importFromBcl(InputStream bclInputStream, ImportMode mode) throws IOException {
+        if (bclInputStream == null) throw new IllegalArgumentException("Input stream is null");
+        if (mode == null) mode = ImportMode.SKIP;
+
+        String baseUri = prefs.getString("base_uri", null);
+        if (baseUri != null) {
+            DocumentFile baseDir = DocumentFile.fromTreeUri(context, Uri.parse(baseUri));
+            if (baseDir == null || !baseDir.exists() || !baseDir.isDirectory()) return 0;
+            if (mode == ImportMode.OVERWRITE) {
+                clearSubfoldersSaf(baseDir);
+            }
+            return importZipToSaf(bclInputStream, baseDir, mode);
+        }
+
+        File baseDir = new File(getBasePath());
+        if (mode == ImportMode.OVERWRITE) {
+            clearSubfoldersFile(baseDir);
+        }
+        return importZipToFile(bclInputStream, baseDir, mode);
+    }
+
+    private void clearSubfoldersFile(File baseDir) {
+        if (baseDir == null || !baseDir.exists()) return;
+        String[] folders = {BOOKS_FOLDER, LOANS_FOLDER, BORROWERS_FOLDER, TAGS_FOLDER, THEMES_FOLDER};
+        for (String folder : folders) {
+            File dir = new File(baseDir, folder);
+            File[] files = dir.listFiles();
+            if (files == null) continue;
+            for (File f : files) {
+                // keep the library folder intact
+                if (f.isFile()) f.delete();
+            }
+        }
+    }
+
+    private void clearSubfoldersSaf(DocumentFile baseDir) {
+        String[] folders = {BOOKS_FOLDER, LOANS_FOLDER, BORROWERS_FOLDER, TAGS_FOLDER, THEMES_FOLDER};
+        for (String folder : folders) {
+            DocumentFile dir = baseDir.findFile(folder);
+            if (dir == null || !dir.isDirectory()) continue;
+            for (DocumentFile f : dir.listFiles()) {
+                if (f.isFile()) f.delete();
+            }
+        }
+    }
+
+    private int importZipToFile(InputStream in, File baseDir, ImportMode mode) throws IOException {
+        int imported = 0;
+        try (ZipInputStream zis = new ZipInputStream(in)) {
+            ZipEntry entry;
+            while ((entry = zis.getNextEntry()) != null) {
+                if (entry.isDirectory()) continue;
+                String entryName = normalizeZipEntryName(entry.getName());
+                if (entryName == null) continue;
+                if (!isSupportedImportEntry(entryName)) continue;
+
+                File outFile = new File(baseDir, entryName);
+                File parent = outFile.getParentFile();
+                if (parent != null && !parent.exists()) parent.mkdirs();
+
+                if (mode == ImportMode.SKIP && outFile.exists()) continue;
+
+                if (mode == ImportMode.CREATE_NEW && outFile.exists()) {
+                    outFile = new File(parent, generateImportFileName(entryName));
+                }
+
+                byte[] bytes = readAllBytes(zis);
+                if (mode == ImportMode.CREATE_NEW && looksLikeJson(entryName)) {
+                    bytes = rewriteJsonId(bytes);
+                }
+
+                try (FileOutputStream fos = new FileOutputStream(outFile)) {
+                    fos.write(bytes);
+                }
+                imported++;
+            }
+        }
+        return imported;
+    }
+
+    private int importZipToSaf(InputStream in, DocumentFile baseDir, ImportMode mode) throws IOException {
+        int imported = 0;
+        try (ZipInputStream zis = new ZipInputStream(in)) {
+            ZipEntry entry;
+            while ((entry = zis.getNextEntry()) != null) {
+                if (entry.isDirectory()) continue;
+                String entryName = normalizeZipEntryName(entry.getName());
+                if (entryName == null) continue;
+                if (!isSupportedImportEntry(entryName)) continue;
+
+                DocumentFile parentDir = ensureSafParentDir(baseDir, entryName);
+                if (parentDir == null) continue;
+
+                String leafName = new File(entryName).getName();
+                DocumentFile existing = parentDir.findFile(leafName);
+                if (mode == ImportMode.SKIP && existing != null && existing.exists()) continue;
+
+                String targetName = leafName;
+                if (mode == ImportMode.CREATE_NEW && existing != null && existing.exists()) {
+                    targetName = generateImportFileName(entryName);
+                }
+
+                byte[] bytes = readAllBytes(zis);
+                if (mode == ImportMode.CREATE_NEW && looksLikeJson(entryName)) {
+                    bytes = rewriteJsonId(bytes);
+                }
+
+                DocumentFile outDoc = parentDir.findFile(targetName);
+                if (outDoc == null) {
+                    outDoc = parentDir.createFile("application/octet-stream", targetName);
+                }
+                if (outDoc == null) continue;
+
+                try (OutputStream out = context.getContentResolver().openOutputStream(outDoc.getUri())) {
+                    if (out != null) out.write(bytes);
+                }
+                imported++;
+            }
+        }
+        return imported;
+    }
+
+    private DocumentFile ensureSafParentDir(DocumentFile baseDir, String entryName) {
+        String[] parts = entryName.split("/");
+        DocumentFile current = baseDir;
+        for (int i = 0; i < parts.length - 1; i++) {
+            String p = parts[i];
+            if (p == null || p.isEmpty()) continue;
+            DocumentFile next = current.findFile(p);
+            if (next == null || !next.isDirectory()) {
+                next = current.createDirectory(p);
+            }
+            if (next == null) return null;
+            current = next;
+        }
+        return current;
+    }
+
+    private String normalizeZipEntryName(String raw) {
+        if (raw == null) return null;
+        String name = raw.replace("\\", "/");
+        if (name.startsWith("/")) name = name.substring(1);
+        if (name.startsWith(BASE_FOLDER + "/")) {
+            name = name.substring((BASE_FOLDER + "/").length());
+        }
+        // Don't allow path traversal
+        if (name.contains("..")) return null;
+        return name;
+    }
+
+    private boolean isSupportedImportEntry(String entryName) {
+        return entryName.startsWith(BOOKS_FOLDER + "/")
+                || entryName.startsWith(LOANS_FOLDER + "/")
+                || entryName.startsWith(BORROWERS_FOLDER + "/")
+                || entryName.startsWith(TAGS_FOLDER + "/")
+                || entryName.startsWith(THEMES_FOLDER + "/")
+                || entryName.startsWith(LIBRARY_FOLDER + "/");
+    }
+
+    private boolean looksLikeJson(String entryName) {
+        return entryName.endsWith(".bcb") || entryName.endsWith(".bcbr") || entryName.endsWith(".bclo") || entryName.endsWith(".bct");
+    }
+
+    private String generateImportFileName(String entryName) {
+        String ext = "";
+        int dot = entryName.lastIndexOf('.');
+        if (dot >= 0) ext = entryName.substring(dot + 1);
+
+        String type = "file";
+        if (entryName.startsWith(BOOKS_FOLDER + "/")) type = "book";
+        else if (entryName.startsWith(LOANS_FOLDER + "/")) type = "loan";
+        else if (entryName.startsWith(BORROWERS_FOLDER + "/")) type = "borrower";
+        else if (entryName.startsWith(TAGS_FOLDER + "/")) type = "tag";
+        else if (entryName.startsWith(THEMES_FOLDER + "/")) type = "theme";
+
+        return generateFileName(type, ext);
+    }
+
+    private byte[] rewriteJsonId(byte[] bytes) {
+        try {
+            String s = new String(bytes);
+            JSONObject obj = new JSONObject(s);
+            obj.put("id", ensureId(obj.optLong("id")));
+            if (obj.has("dateAdded")) obj.put("dateAdded", System.currentTimeMillis());
+            if (obj.has("lastModified")) obj.put("lastModified", System.currentTimeMillis());
+            return obj.toString(2).getBytes();
+        } catch (Exception e) {
+            return bytes;
+        }
+    }
+
+    private byte[] readAllBytes(InputStream in) throws IOException {
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        byte[] buffer = new byte[8192];
+        int len;
+        while ((len = in.read(buffer)) > 0) {
+            bos.write(buffer, 0, len);
+        }
+        return bos.toByteArray();
     }
     
     // JSON conversion helpers
@@ -827,13 +1248,9 @@ return "book_" + id + ".bcb";
             }
             
             JSONObject json = themeToJson(theme);
-            String fileName = theme.getId() > 0 ? "theme_" + theme.getId() + ".bct" : generateFileName("theme", "bct");
-            File file = new File(new File(getBasePath(), THEMES_FOLDER), fileName);
-            
-            if (!file.getName().endsWith(".bct")) {
-                file = new File(new File(getBasePath(), THEMES_FOLDER), 
-                    generateFileName("theme", "bct"));
-            }
+            File dir = new File(getBasePath(), THEMES_FOLDER);
+            File file = theme.getId() > 0 ? findJsonFileById(dir, ".bct", theme.getId()) : null;
+            if (file == null) file = new File(dir, generateFileName("theme", "bct"));
             
             FileWriter writer = new FileWriter(file);
             writer.write(json.toString(2));
@@ -855,14 +1272,9 @@ return "book_" + id + ".bcb";
             if (dir == null) return false;
             
             JSONObject json = themeToJson(theme);
-            String fileName = theme.getId() > 0 ? "theme_" + theme.getId() + ".bct" : generateFileName("theme", "bct");
-            if (!fileName.endsWith(".bct")) {
-                fileName = generateFileName("theme", "bct");
-            }
-            
-            DocumentFile file = dir.findFile(fileName);
+            DocumentFile file = theme.getId() > 0 ? findJsonDocFileById(dir, ".bct", theme.getId()) : null;
             if (file == null) {
-                file = dir.createFile("application/octet-stream", fileName);
+                file = dir.createFile("application/octet-stream", generateFileName("theme", "bct"));
             }
             if (file == null) return false;
             

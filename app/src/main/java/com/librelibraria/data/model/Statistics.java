@@ -11,6 +11,8 @@ public class Statistics {
     private int availableBooks;
     private int borrowedBooks;
     private int overdueBooks;
+    private int activeLoans;
+    private int totalBorrowers;
     private int readingBooks;
     private int readBooks;
     private int ownBooks;
@@ -27,6 +29,8 @@ public class Statistics {
         this.availableBooks = 0;
         this.borrowedBooks = 0;
         this.overdueBooks = 0;
+        this.activeLoans = 0;
+        this.totalBorrowers = 0;
         this.readingBooks = 0;
         this.readBooks = 0;
         this.ownBooks = 0;
@@ -49,6 +53,12 @@ public class Statistics {
     public int getOverdueBooks() { return overdueBooks; }
     public void setOverdueBooks(int overdueBooks) { this.overdueBooks = overdueBooks; }
 
+    public int getActiveLoans() { return activeLoans; }
+    public void setActiveLoans(int activeLoans) { this.activeLoans = activeLoans; }
+
+    public int getTotalBorrowers() { return totalBorrowers; }
+    public void setTotalBorrowers(int totalBorrowers) { this.totalBorrowers = totalBorrowers; }
+
     public int getReadingBooks() { return readingBooks; }
     public void setReadingBooks(int readingBooks) { this.readingBooks = readingBooks; }
 
@@ -69,9 +79,9 @@ public class Statistics {
 
     // New setters for service compatibility
     public void setOnLoanBooks(int onLoanBooks) { this.borrowedBooks = onLoanBooks; }
-    public void setActiveLoans(Integer activeLoans) { /* not stored directly */ }
+    public void setActiveLoans(Integer activeLoans) { this.activeLoans = activeLoans != null ? activeLoans : 0; }
     public void setOverdueLoans(Integer overdueLoans) { this.overdueBooks = overdueLoans != null ? overdueLoans : 0; }
-    public void setTotalBorrowers(Integer totalBorrowers) { /* not stored directly */ }
+    public void setTotalBorrowers(Integer totalBorrowers) { this.totalBorrowers = totalBorrowers != null ? totalBorrowers : 0; }
 
     public double getAverageRating() { return averageRating; }
     public void setAverageRating(double averageRating) { this.averageRating = averageRating; }

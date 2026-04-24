@@ -12,6 +12,11 @@
         android:title="@string/catalog" />
 
     <item
+        android:id="@+id/nav_diary"
+        android:icon="@drawable/ic_diary"
+        android:title="@string/diary" />
+
+    <item
         android:id="@+id/nav_lending"
         android:icon="@drawable/ic_loan"
         android:title="@string/lending" />

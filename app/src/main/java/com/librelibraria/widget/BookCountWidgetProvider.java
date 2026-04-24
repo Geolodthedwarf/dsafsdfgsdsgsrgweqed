@@ -7,10 +7,11 @@ import android.content.Context;
 import android.content.Intent;
 import android.widget.RemoteViews;
 import com.librelibraria.R;
-import com.librelibraria.data.service.CatalogService;
+import com.librelibraria.data.database.AppDatabase;
 import com.librelibraria.ui.activities.MainActivity;
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.disposables.Disposable;
+import io.reactivex.rxjava3.schedulers.Schedulers;
 
 public class BookCountWidgetProvider extends AppWidgetProvider {
 
@@ -28,12 +29,12 @@ public class BookCountWidgetProvider extends AppWidgetProvider {
             currentDisposable.dispose();
         }
 
-        CatalogService catalogService = new CatalogService(context);
-        currentDisposable = catalogService.getAllBooks()
+        AppDatabase db = AppDatabase.getInstance(context);
+        currentDisposable = db.bookDao().getTotalCount()
+            .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
-            .subscribe(books -> {
+            .subscribe(count -> {
                 RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.widget_book_count);
-                int count = (books != null) ? books.size() : 0;
                 views.setTextViewText(R.id.widget_book_count, String.valueOf(count));
                 views.setTextViewText(R.id.widget_title, context.getString(R.string.app_name));
 

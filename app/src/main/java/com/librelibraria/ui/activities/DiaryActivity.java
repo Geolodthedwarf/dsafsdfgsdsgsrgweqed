@@ -5,6 +5,8 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
+import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -20,6 +22,8 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.textfield.TextInputEditText;
 import com.librelibraria.R;
 import com.librelibraria.data.model.DiaryEntry;
+import com.librelibraria.data.model.ReadingStatus;
+import com.librelibraria.data.repository.BookRepository;
 import com.librelibraria.ui.adapters.DiaryAdapter;
 import com.librelibraria.ui.viewmodels.DiaryViewModel;
 
@@ -35,6 +39,7 @@ public class DiaryActivity extends AppCompatActivity implements DiaryAdapter.OnD
 
     private DiaryAdapter adapter;
     private DiaryViewModel viewModel;
+    private BookRepository bookRepository;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -46,6 +51,8 @@ public class DiaryActivity extends AppCompatActivity implements DiaryAdapter.OnD
         setupRecyclerView();
         setupViewModel();
         setupListeners();
+
+        bookRepository = ((com.librelibraria.LibreLibrariaApp) getApplication()).getBookRepository();
     }
 
     private void initViews() {
@@ -111,7 +118,7 @@ public class DiaryActivity extends AppCompatActivity implements DiaryAdapter.OnD
     private void showAddEditDialog(DiaryEntry existingEntry) {
         View dialogView = getLayoutInflater().inflate(R.layout.dialog_diary_entry, null);
 
-        TextInputEditText etBookTitle = dialogView.findViewById(R.id.et_book_title);
+        AutoCompleteTextView etBookTitle = dialogView.findViewById(R.id.et_book_title);
         TextInputEditText etNote = dialogView.findViewById(R.id.et_note);
         TextInputEditText etDate = dialogView.findViewById(R.id.et_date);
         TextInputEditText etQuote = dialogView.findViewById(R.id.et_quote);
@@ -128,6 +135,26 @@ public class DiaryActivity extends AppCompatActivity implements DiaryAdapter.OnD
 
         String title = existingEntry != null ? getString(R.string.edit_note) : getString(R.string.add_note);
 
+        final java.util.List<com.librelibraria.data.model.Book>[] readingBooksHolder = new java.util.List[]{new java.util.ArrayList<>()};
+        // Populate dropdown with currently reading books (Room)
+        if (bookRepository != null) {
+            bookRepository.getBooksByReadingStatus(ReadingStatus.READING)
+                    .firstOrError()
+                    .observeOn(io.reactivex.rxjava3.android.schedulers.AndroidSchedulers.mainThread())
+                    .subscribe(
+                            books -> {
+                                readingBooksHolder[0] = books;
+                                java.util.List<String> titles = new java.util.ArrayList<>();
+                                for (var b : books) {
+                                    if (b.getTitle() != null && !b.getTitle().isEmpty()) titles.add(b.getTitle());
+                                }
+                                ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_dropdown_item_1line, titles);
+                                etBookTitle.setAdapter(adapter);
+                            },
+                            error -> {}
+                    );
+        }
+
         new MaterialAlertDialogBuilder(this)
                 .setTitle(title)
                 .setView(dialogView)
@@ -141,6 +168,18 @@ public class DiaryActivity extends AppCompatActivity implements DiaryAdapter.OnD
                         return;
                     }
 
+                    long selectedBookId = -1;
+                    for (var b : readingBooksHolder[0]) {
+                        if (b.getTitle() != null && b.getTitle().equals(bookTitle)) {
+                            selectedBookId = b.getId();
+                            break;
+                        }
+                    }
+                    if (selectedBookId <= 0) {
+                        // Must pick one of the currently reading books
+                        return;
+                    }
+
                     long date;
                     try {
                         java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault());
@@ -150,6 +189,7 @@ public class DiaryActivity extends AppCompatActivity implements DiaryAdapter.OnD
                     }
 
                     if (existingEntry != null) {
+                        existingEntry.setBookId(selectedBookId);
                         existingEntry.setBookTitle(bookTitle);
                         existingEntry.setNote(note);
                         existingEntry.setQuote(quote);
@@ -158,6 +198,7 @@ public class DiaryActivity extends AppCompatActivity implements DiaryAdapter.OnD
                         viewModel.updateEntry(existingEntry);
                     } else {
                         DiaryEntry newEntry = new DiaryEntry();
+                        newEntry.setBookId(selectedBookId);
                         newEntry.setBookTitle(bookTitle);
                         newEntry.setNote(note);
                         newEntry.setQuote(quote);

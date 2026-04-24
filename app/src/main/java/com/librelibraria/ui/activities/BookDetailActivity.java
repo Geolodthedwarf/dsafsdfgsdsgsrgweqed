@@ -1,7 +1,9 @@
 package com.librelibraria.ui.activities;
 
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
+import android.view.MotionEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -10,6 +12,8 @@ import android.widget.RatingBar;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.lifecycle.ViewModelProvider;
@@ -21,6 +25,7 @@ import com.librelibraria.R;
 import com.librelibraria.data.model.Book;
 import com.librelibraria.data.model.LoanStatus;
 import com.librelibraria.ui.dialogs.RatingDialog;
+import com.librelibraria.ui.util.OpenLibraryCover;
 import com.librelibraria.ui.viewmodels.BookDetailViewModel;
 
 /**
@@ -50,6 +55,7 @@ public class BookDetailActivity extends AppCompatActivity {
 
     private BookDetailViewModel viewModel;
     private long bookId;
+    private ActivityResultLauncher<String[]> coverPicker;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -66,6 +72,21 @@ public class BookDetailActivity extends AppCompatActivity {
         setupToolbar();
         setupViewModel();
         setupListeners();
+
+        coverPicker = registerForActivityResult(
+                new ActivityResultContracts.OpenDocument(),
+                uri -> {
+                    if (uri == null) return;
+                    try {
+                        getContentResolver().takePersistableUriPermission(
+                                uri,
+                                Intent.FLAG_GRANT_READ_URI_PERMISSION
+                        );
+                    } catch (SecurityException ignored) {
+                    }
+                    viewModel.updateCover(uri.toString());
+                }
+        );
     }
 
     private void initViews() {
@@ -125,14 +146,22 @@ public class BookDetailActivity extends AppCompatActivity {
             fab.setOnClickListener(v -> showActionDialog());
         }
 
+        ivCover.setOnClickListener(v -> {
+            // Let user pick a cover when OpenLibrary cover isn't available or they want a custom one.
+            coverPicker.launch(new String[]{"image/*"});
+        });
+
         availabilityCard.setOnClickListener(v -> {
             // Toggle availability or edit copies
         });
 
-        ratingBar.setOnRatingBarChangeListener((ratingBar, rating, fromUser) -> {
-            if (fromUser) {
-                showRatingDialog(rating);
+        ratingBar.setOnTouchListener((v, event) -> {
+            if (event.getAction() == MotionEvent.ACTION_UP) {
+                Book book = viewModel.getBook().getValue();
+                float current = book != null ? (float) book.getRating() : 0f;
+                showRatingDialog(current);
             }
+            return true; // consume, dialog controls the rating
         });
     }
 
@@ -162,15 +191,14 @@ public class BookDetailActivity extends AppCompatActivity {
             tvStatus.setTextColor(getColor(R.color.status_borrowed));
         }
 
-        if (book.getRating() > 0) {
-            ratingBar.setRating((float) book.getRating());
-            ratingBar.setVisibility(View.VISIBLE);
-        } else {
-            ratingBar.setVisibility(View.GONE);
-        }
+        ratingBar.setRating((float) book.getRating());
+        ratingBar.setVisibility(View.VISIBLE);
 
         // Load cover image
         String coverUrl = book.getCustomCoverUrl();
+        if (coverUrl == null || coverUrl.isEmpty()) {
+            coverUrl = OpenLibraryCover.large(book.getIsbn());
+        }
         if (coverUrl != null && !coverUrl.isEmpty()) {
             Glide.with(this)
                     .load(coverUrl)

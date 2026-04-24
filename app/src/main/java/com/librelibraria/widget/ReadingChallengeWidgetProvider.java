@@ -8,11 +8,14 @@ import android.content.Intent;
 import android.widget.RemoteViews;
 import com.librelibraria.R;
 import com.librelibraria.data.model.Book;
+import com.librelibraria.data.model.ReadingStatus;
 import com.librelibraria.data.service.CatalogService;
 import com.librelibraria.data.service.ChallengeService;
+import com.librelibraria.data.database.AppDatabase;
 import com.librelibraria.ui.activities.MainActivity;
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.disposables.Disposable;
+import io.reactivex.rxjava3.schedulers.Schedulers;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
@@ -34,11 +37,12 @@ public class ReadingChallengeWidgetProvider extends AppWidgetProvider {
         }
 
         ChallengeService challengeService = new ChallengeService(context);
-        CatalogService catalogService = new CatalogService(context);
+        AppDatabase db = AppDatabase.getInstance(context);
 
         currentDisposable = challengeService.getActiveChallenge()
             .observeOn(AndroidSchedulers.mainThread())
-            .flatMap(challenge -> catalogService.getAllBooks())
+            .flatMap(challenge -> db.bookDao().getBooksByReadingStatus(ReadingStatus.READ).firstOrError())
+            .subscribeOn(Schedulers.io())
             .subscribe(books -> {
                 RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.widget_reading_challenge);
 
@@ -48,8 +52,7 @@ public class ReadingChallengeWidgetProvider extends AppWidgetProvider {
 
                 if (books != null) {
                     for (Book book : books) {
-                        String status = book.getStatus();
-                        if ("READ".equals(status) && book.getLastModified() > 0) {
+                        if (book.getLastModified() > 0) {
                             java.util.Calendar cal = java.util.Calendar.getInstance();
                             cal.setTimeInMillis(book.getLastModified());
                             if (cal.get(java.util.Calendar.YEAR) == currentYear) {

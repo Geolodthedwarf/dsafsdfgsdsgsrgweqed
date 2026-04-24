@@ -79,13 +79,13 @@
 
                     <RatingBar
                         android:id="@+id/rating_bar"
-                        style="?android:attr/ratingBarStyleSmall"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="8dp"
-                        android:isIndicator="true"
                         android:numStars="5"
-                        android:stepSize="0.1" />
+                        android:stepSize="0.1"
+                        android:scaleX="1.4"
+                        android:scaleY="1.4" />
 
                     <TextView
                         android:id="@+id/tv_reading_status"

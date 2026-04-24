@@ -14,6 +14,7 @@ import com.google.android.material.chip.Chip;
 import com.librelibraria.R;
 import com.librelibraria.data.model.Book;
 import com.librelibraria.ui.util.AppAnimations;
+import com.librelibraria.ui.util.OpenLibraryCover;
 
 import java.util.List;
 
@@ -89,6 +90,9 @@ public class BookAdapter extends RecyclerView.Adapter<BookAdapter.BookViewHolder
 
             // Load cover image
             String coverUrl = book.getCustomCoverUrl();
+            if (coverUrl == null || coverUrl.isEmpty()) {
+                coverUrl = OpenLibraryCover.medium(book.getIsbn());
+            }
             if (coverUrl != null && !coverUrl.isEmpty()) {
                 Glide.with(itemView.getContext())
                         .load(coverUrl)

@@ -10,8 +10,9 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.app.AppCompatDelegate;
 import androidx.appcompat.widget.Toolbar;
 import androidx.appcompat.widget.SwitchCompat;
 import androidx.lifecycle.ViewModelProvider;
@@ -19,7 +20,10 @@ import androidx.lifecycle.ViewModelProvider;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.librelibraria.LibreLibrariaApp;
 import com.librelibraria.R;
+import com.librelibraria.data.service.ExportService;
+import com.librelibraria.data.storage.FileStorageManager;
 import com.librelibraria.ui.viewmodels.SettingsViewModel;
+import com.librelibraria.ui.activities.ThemeSwitcherActivity;
 
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
@@ -37,17 +41,39 @@ public class SettingsActivity extends AppCompatActivity {
     private LinearLayout llThemeEditor;
     private LinearLayout llAdvancedSettings;
     private SwitchCompat switchServerEnabled;
-    private SwitchCompat switchDarkMode;
     private TextView tvServerStatus;
     private TextView tvDatabaseUrl;
 
     private SettingsViewModel viewModel;
     private final CompositeDisposable disposables = new CompositeDisposable();
 
+    private ActivityResultLauncher<String> importBclLauncher;
+    private ActivityResultLauncher<String> exportBclLauncher;
+    private android.net.Uri pendingImportUri;
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_settings);
+
+        importBclLauncher = registerForActivityResult(
+                new ActivityResultContracts.GetContent(),
+                uri -> {
+                    if (uri != null) {
+                        pendingImportUri = uri;
+                        showBclImportOptionsDialog();
+                    }
+                }
+        );
+
+        exportBclLauncher = registerForActivityResult(
+                new ActivityResultContracts.CreateDocument("application/octet-stream"),
+                uri -> {
+                    if (uri != null) {
+                        exportBclToUri(uri);
+                    }
+                }
+        );
 
         initViews();
         setupToolbar();
@@ -66,7 +92,6 @@ public class SettingsActivity extends AppCompatActivity {
         llAdvancedSettings = findViewById(R.id.ll_advanced_settings);
 
         switchServerEnabled = findViewById(R.id.switch_sync_enabled);
-        switchDarkMode = findViewById(R.id.switch_dark_mode);
         tvServerStatus = findViewById(R.id.tv_server_url);
         tvDatabaseUrl = findViewById(R.id.tv_current_language);
     }
@@ -104,9 +129,6 @@ public class SettingsActivity extends AppCompatActivity {
             }
         });
 
-        // Load dark mode setting
-        LibreLibrariaApp app = (LibreLibrariaApp) getApplication();
-        switchDarkMode.setChecked(app.getSettingsRepository().isDarkMode());
     }
 
     private void setupListeners() {
@@ -116,12 +138,12 @@ public class SettingsActivity extends AppCompatActivity {
             viewModel.enableServerMode(isChecked);
         });
 
-        switchDarkMode.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            applyDarkMode(isChecked);
+        llDarkMode.setOnClickListener(v -> {
+            startActivity(new Intent(this, ThemeSwitcherActivity.class));
         });
 
         llAbout.setOnClickListener(v -> showAboutDialog());
-        llClearData.setOnClickListener(v -> showClearDataConfirmation());
+        llClearData.setOnClickListener(v -> showImportExportDialog());
 llThemeEditor.setOnClickListener(v -> openThemeEditor());
         llAdvancedSettings.setOnClickListener(v -> openAdvancedSettings());
     }
@@ -132,15 +154,6 @@ llThemeEditor.setOnClickListener(v -> openThemeEditor());
 
     private void openThemeEditor() {
         startActivity(new Intent(this, ThemeEditorActivity.class));
-    }
-
-    private void applyDarkMode(boolean darkMode) {
-        LibreLibrariaApp app = (LibreLibrariaApp) getApplication();
-        app.getSettingsRepository().setDarkMode(darkMode);
-
-        AppCompatDelegate.setDefaultNightMode(
-            darkMode ? AppCompatDelegate.MODE_NIGHT_YES : AppCompatDelegate.MODE_NIGHT_NO
-        );
     }
 
     private void showServerSettingsDialog() {
@@ -174,13 +187,79 @@ llThemeEditor.setOnClickListener(v -> openThemeEditor());
                 .show();
     }
 
-    private void showClearDataConfirmation() {
+    private void showImportExportDialog() {
         new MaterialAlertDialogBuilder(this)
-                .setTitle(R.string.delete)
-                .setMessage("Are you sure you want to clear all data? This action cannot be undone.")
-                .setPositiveButton(R.string.delete, (dialog, which) -> viewModel.clearAllData())
+                .setTitle(R.string.import_export)
+                .setItems(new String[]{
+                        getString(R.string.export_library),
+                        getString(R.string.import_library)
+                }, (dialog, which) -> {
+                    if (which == 0) {
+                        exportBclToDownloads();
+                    } else {
+                        importBclFromDownloads();
+                    }
+                })
+                .show();
+    }
+
+    private void exportBclToDownloads() {
+        String timestamp = new java.text.SimpleDateFormat("yyyyMMdd_HHmmss", java.util.Locale.US)
+                .format(new java.util.Date());
+        String suggested = "LibreLibraria_Export_" + timestamp + ".bcl";
+        exportBclLauncher.launch(suggested);
+    }
+
+    private void importBclFromDownloads() {
+        importBclLauncher.launch("*/*");
+    }
+
+    private void showBclImportOptionsDialog() {
+        if (pendingImportUri == null) return;
+
+        String[] options = new String[]{
+                "Overwrite (replace existing)",
+                "Skip duplicates",
+                "Create new (always import as new)"
+        };
+
+        new MaterialAlertDialogBuilder(this)
+                .setTitle(R.string.import_library)
+                .setItems(options, (dialog, which) -> {
+                    FileStorageManager.ImportMode mode;
+                    if (which == 0) mode = FileStorageManager.ImportMode.OVERWRITE;
+                    else if (which == 1) mode = FileStorageManager.ImportMode.SKIP;
+                    else mode = FileStorageManager.ImportMode.CREATE_NEW;
+                    importBclWithMode(pendingImportUri, mode);
+                })
                 .setNegativeButton(R.string.cancel, null)
                 .show();
+    }
+
+    private void importBclWithMode(android.net.Uri uri, FileStorageManager.ImportMode mode) {
+        FileStorageManager storage = FileStorageManager.getInstance(this);
+
+        disposables.add(io.reactivex.rxjava3.core.Single.fromCallable(() -> {
+                    try (java.io.InputStream in = getContentResolver().openInputStream(uri)) {
+                        if (in == null) return 0;
+                        return storage.importFromBcl(in, mode);
+                    }
+                })
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(
+                        count -> Toast.makeText(this, "Imported " + count + " files", Toast.LENGTH_LONG).show(),
+                        error -> Toast.makeText(this, "Import failed: " + error.getMessage(), Toast.LENGTH_LONG).show()
+                ));
+    }
+
+    private void exportBclToUri(android.net.Uri uri) {
+        ExportService exportService = new ExportService(this);
+        disposables.add(exportService.exportToBCL(uri)
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(
+                        () -> Toast.makeText(this, "Exported .bcl successfully", Toast.LENGTH_LONG).show(),
+                        error -> Toast.makeText(this, "Export failed: " + error.getMessage(), Toast.LENGTH_LONG).show()
+                ));
     }
 
     @Override

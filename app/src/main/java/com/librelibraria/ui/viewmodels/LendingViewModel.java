@@ -11,7 +11,9 @@ import com.librelibraria.LibreLibrariaApp;
 import com.librelibraria.data.model.Book;
 import com.librelibraria.data.model.Borrower;
 import com.librelibraria.data.model.Loan;
-import com.librelibraria.data.service.LendingService;
+import com.librelibraria.data.repository.BookRepository;
+import com.librelibraria.data.repository.LoanRepository;
+import com.librelibraria.data.service.HybridLibraryService;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,7 +27,9 @@ import io.reactivex.rxjava3.schedulers.Schedulers;
  */
 public class LendingViewModel extends AndroidViewModel {
 
-    private final LendingService lendingService;
+    private final LoanRepository loanRepository;
+    private final BookRepository bookRepository;
+    private final HybridLibraryService hybridLibraryService;
     private final CompositeDisposable disposables;
 
     private final MutableLiveData<List<Loan>> activeLoans = new MutableLiveData<>(new ArrayList<>());
@@ -40,7 +44,9 @@ public class LendingViewModel extends AndroidViewModel {
         super(application);
 
         LibreLibrariaApp app = (LibreLibrariaApp) application;
-        lendingService = app.getLendingService();
+        loanRepository = app.getLoanRepository();
+        bookRepository = app.getBookRepository();
+        hybridLibraryService = app.getHybridLibraryService();
         disposables = new CompositeDisposable();
 
         loadData();
@@ -78,7 +84,8 @@ public class LendingViewModel extends AndroidViewModel {
         isLoading.setValue(true);
 
         disposables.add(
-            lendingService.getAllLoans()
+            loanRepository.getAllLoans()
+                .firstOrError()
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(
@@ -107,7 +114,8 @@ public class LendingViewModel extends AndroidViewModel {
         );
 
         disposables.add(
-            lendingService.getAllBorrowers()
+            loanRepository.getAllBorrowers()
+                .firstOrError()
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(
@@ -119,13 +127,24 @@ public class LendingViewModel extends AndroidViewModel {
                     }
                 )
         );
+
+        disposables.add(
+            bookRepository.getAvailableBooks()
+                .firstOrError()
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(
+                    availableBooks::setValue,
+                    error -> {}
+                )
+        );
     }
 
     public void lendBook(long bookId, Long borrowerId, String borrowerName, long dueDate) {
         isLoading.setValue(true);
 
         disposables.add(
-            lendingService.lendBook(bookId, borrowerId, borrowerName, dueDate)
+            hybridLibraryService.lendBook(bookId, borrowerId, borrowerName, dueDate)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(
@@ -145,7 +164,7 @@ public class LendingViewModel extends AndroidViewModel {
         isLoading.setValue(true);
 
         disposables.add(
-            lendingService.returnBook(loanId)
+            hybridLibraryService.returnBook(loanId)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(
@@ -170,7 +189,8 @@ public class LendingViewModel extends AndroidViewModel {
         borrower.setPhone(phone);
 
         disposables.add(
-            lendingService.addBorrower(borrower)
+            hybridLibraryService.saveBorrower(borrower)
+                .ignoreElement()
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(
@@ -188,7 +208,7 @@ public class LendingViewModel extends AndroidViewModel {
 
     public void deleteBorrower(Borrower borrower) {
         disposables.add(
-            lendingService.deleteBorrower(borrower)
+            hybridLibraryService.deleteBorrower(borrower.getId())
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(
@@ -206,7 +226,7 @@ public class LendingViewModel extends AndroidViewModel {
         isLoading.setValue(true);
 
         disposables.add(
-            lendingService.returnBook(loanId)
+            hybridLibraryService.returnBook(loanId)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(

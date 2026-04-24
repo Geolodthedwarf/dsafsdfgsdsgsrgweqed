@@ -1,7 +1,8 @@
 package com.librelibraria.data.service;
 
 import android.content.Context;
-import android.os.Environment;
+import android.net.Uri;
+import androidx.annotation.NonNull;
 import com.librelibraria.data.model.Book;
 import com.librelibraria.data.storage.FileStorageManager;
 import io.reactivex.rxjava3.core.Completable;
@@ -9,6 +10,7 @@ import io.reactivex.rxjava3.core.Single;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 import java.io.File;
 import java.io.FileWriter;
+import java.io.OutputStream;
 import java.util.List;
 
 public class ExportService {
@@ -63,7 +65,8 @@ public class ExportService {
 
     public Single<String> exportToBCL() {
         return Single.fromCallable(() -> {
-            boolean success = storageManager.exportToBCL("library_export");
+            // Always create a copy inside /LibreLibraria/library/
+            boolean success = storageManager.exportToBCL("LibreLibraria_Export");
             if (success) {
                 String path = storageManager.getBasePath();
                 File libraryDir = new File(path, "library");
@@ -73,6 +76,25 @@ public class ExportService {
                 }
             }
             return "";
+        }).subscribeOn(Schedulers.io());
+    }
+
+    /**
+     * Export a BCL to a user-chosen destination Uri (SAF ACTION_CREATE_DOCUMENT),
+     * and also write a copy into /LibreLibraria/library/.
+     */
+    public Completable exportToBCL(@NonNull Uri destinationUri) {
+        return Completable.fromAction(() -> {
+            if (destinationUri == null) throw new IllegalArgumentException("Destination Uri is null");
+
+            // 1) Save to user-selected Uri
+            try (OutputStream out = context.getContentResolver().openOutputStream(destinationUri)) {
+                if (out == null) throw new IllegalStateException("Unable to open output stream");
+                storageManager.exportToBCL(out);
+            }
+
+            // 2) Always store a copy in /LibreLibraria/library/
+            storageManager.exportToBCL("LibreLibraria_Export");
         }).subscribeOn(Schedulers.io());
     }
 

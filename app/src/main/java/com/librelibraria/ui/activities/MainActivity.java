@@ -19,6 +19,7 @@ import com.librelibraria.R;
 import com.librelibraria.LibreLibrariaApp;
 import com.librelibraria.ui.fragments.CatalogFragment;
 import com.librelibraria.ui.fragments.DashboardFragment;
+import com.librelibraria.ui.fragments.DiaryFragment;
 import com.librelibraria.ui.fragments.LendingFragment;
 import com.librelibraria.ui.fragments.BorrowersFragment;
 import com.librelibraria.ui.fragments.MoreFragment;
@@ -113,6 +114,9 @@ public class MainActivity extends AppCompatActivity implements NavigationBarView
             return true;
         } else if (itemId == R.id.nav_catalog) {
             loadFragment(new CatalogFragment());
+            return true;
+        } else if (itemId == R.id.nav_diary) {
+            loadFragment(new DiaryFragment());
             return true;
         } else if (itemId == R.id.nav_lending) {
             loadFragment(new LendingFragment());

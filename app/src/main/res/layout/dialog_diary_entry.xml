@@ -13,9 +13,10 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:hint="@string/book_title"
-        app:startIconDrawable="@drawable/ic_book">
+        app:startIconDrawable="@drawable/ic_book"
+        app:endIconMode="dropdown_menu">
 
-        <com.google.android.material.textfield.TextInputEditText
+        <AutoCompleteTextView
             android:id="@+id/et_book_title"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

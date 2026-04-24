@@ -7,11 +7,13 @@ import android.content.Context;
 import android.content.Intent;
 import android.widget.RemoteViews;
 import com.librelibraria.R;
-import com.librelibraria.data.service.CatalogService;
+import com.librelibraria.data.database.AppDatabase;
+import com.librelibraria.data.model.ReadingStatus;
 import com.librelibraria.ui.activities.MainActivity;
 import com.librelibraria.ui.activities.BookDetailActivity;
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.disposables.Disposable;
+import io.reactivex.rxjava3.schedulers.Schedulers;
 
 public class CurrentlyReadingWidgetProvider extends AppWidgetProvider {
 
@@ -29,8 +31,10 @@ public class CurrentlyReadingWidgetProvider extends AppWidgetProvider {
             currentDisposable.dispose();
         }
 
-        CatalogService catalogService = new CatalogService(context);
-        currentDisposable = catalogService.getBooksByStatus("READING")
+        AppDatabase db = AppDatabase.getInstance(context);
+        currentDisposable = db.bookDao().getBooksByReadingStatus(ReadingStatus.READING)
+            .firstOrError()
+            .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe(books -> {
                 RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.widget_currently_reading);
@@ -48,6 +52,8 @@ public class CurrentlyReadingWidgetProvider extends AppWidgetProvider {
 
                     if (book.getCustomCoverUrl() != null && !book.getCustomCoverUrl().isEmpty()) {
                         views.setImageViewUri(R.id.widget_book_cover, android.net.Uri.parse(book.getCustomCoverUrl()));
+                    } else {
+                        views.setImageViewResource(R.id.widget_book_cover, R.drawable.ic_book_placeholder);
                     }
 
                     Intent intent = new Intent(context, BookDetailActivity.class);

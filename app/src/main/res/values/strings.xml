@@ -309,6 +309,8 @@
     <string name="copies">Copies</string>
     <string name="appearance">Appearance</string>
     <string name="dark_mode">Dark Mode</string>
+    <string name="theme">Theme</string>
+    <string name="theme_switcher">Choose light/dark and color theme</string>
     <string name="dark_mode_description">Enable dark theme for the app</string>
     <string name="quick_lend">Quick Lend</string>
     <string name="scan_isbn">Scan ISBN</string>

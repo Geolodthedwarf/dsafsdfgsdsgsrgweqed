@@ -5,14 +5,12 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
-import android.provider.DocumentsContract;
 import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.documentfile.provider.DocumentFile;
 import androidx.viewpager2.widget.ViewPager2;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
@@ -47,16 +45,15 @@ public class IntroActivity extends AppCompatActivity {
                 if (result.getResultCode() == RESULT_OK && result.getData() != null) {
                     Uri treeUri = result.getData().getData();
                     if (treeUri != null) {
-                        getContentResolver().takePersistableUriPermission(treeUri, 
-                            Intent.FLAG_GRANT_READ_URI_PERMISSION | 
-                            Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
-                        
-                        storageManager.setBaseUri(treeUri.toString());
-                        
-                        if (storageManager.createLibreLibrariaFolder(treeUri)) {
-                            String path = "LibreLibraria";
-                            storageManager.setBasePath(path);
-                            storageManager.createBaseFolders();
+                        final int flags = result.getData().getFlags()
+                                & (Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+                        try {
+                            getContentResolver().takePersistableUriPermission(treeUri, flags);
+                        } catch (SecurityException ignored) {
+                            // If persistable permission isn't granted (some providers), we still try to proceed.
+                        }
+
+                        if (storageManager.initializeFromSelectedTree(treeUri)) {
                             Toast.makeText(this, R.string.folder_selected, Toast.LENGTH_SHORT).show();
                             finishIntro();
                         } else {

@@ -13,7 +13,7 @@ import com.librelibraria.data.model.Loan;
 import com.librelibraria.data.model.LoanStatus;
 import com.librelibraria.data.repository.BookRepository;
 import com.librelibraria.data.repository.LoanRepository;
-import com.librelibraria.data.service.LendingService;
+import com.librelibraria.data.service.HybridLibraryService;
 import com.librelibraria.data.service.RatingService;
 
 import java.util.List;
@@ -30,7 +30,7 @@ public class BookDetailViewModel extends AndroidViewModel {
     private final BookRepository bookRepository;
     private final LoanRepository loanRepository;
     private final RatingService ratingService;
-    private final LendingService lendingService;
+    private final HybridLibraryService hybridLibraryService;
     private final CompositeDisposable disposables;
 
     private final MutableLiveData<Book> book = new MutableLiveData<>();
@@ -47,7 +47,7 @@ public class BookDetailViewModel extends AndroidViewModel {
         bookRepository = app.getBookRepository();
         loanRepository = app.getLoanRepository();
         ratingService = app.getRatingService();
-        lendingService = app.getLendingService();
+        hybridLibraryService = app.getHybridLibraryService();
         disposables = new CompositeDisposable();
     }
 
@@ -121,7 +121,7 @@ public class BookDetailViewModel extends AndroidViewModel {
         isLoading.setValue(true);
 
         disposables.add(
-            bookRepository.deleteBook(currentBook)
+            hybridLibraryService.deleteBook(currentBook.getId())
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(
@@ -156,6 +156,22 @@ public class BookDetailViewModel extends AndroidViewModel {
         );
     }
 
+    public void updateCover(@NonNull String coverUriOrUrl) {
+        Book currentBook = book.getValue();
+        if (currentBook == null) return;
+
+        currentBook.setCustomCoverUrl(coverUriOrUrl);
+        disposables.add(
+            hybridLibraryService.saveBook(currentBook)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(
+                    id -> loadBook(currentBook.getId()),
+                    error -> {}
+                )
+        );
+    }
+
     public void returnBook() {
         Loan loan = activeLoan.getValue();
         if (loan == null) return;
@@ -164,7 +180,7 @@ public class BookDetailViewModel extends AndroidViewModel {
         if (currentBook == null) return;
 
         disposables.add(
-            lendingService.returnBook(loan.getId())
+            hybridLibraryService.returnBook(loan.getId())
                 .andThen(bookRepository.getBookById(currentBook.getId()))
                 .flatMapCompletable(bookToUpdate -> {
                     // LendingService already updates availability; only refresh local view model state.

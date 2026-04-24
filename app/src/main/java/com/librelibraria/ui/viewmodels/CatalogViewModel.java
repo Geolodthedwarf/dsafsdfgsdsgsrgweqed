@@ -115,15 +115,39 @@ public class CatalogViewModel extends AndroidViewModel {
     }
 
     private void applyFilters() {
-        disposables.add(
-                catalogService.loadCatalog(currentSearchQuery, currentGenreFilter, 1, 1000)
-                        .subscribeOn(Schedulers.io())
-                        .observeOn(AndroidSchedulers.mainThread())
-                        .subscribe(
-                                filteredBooks::setValue,
-                                error -> filteredBooks.setValue(new ArrayList<>())
-                        )
-        );
+        List<Book> source = allBooks.getValue();
+        if (source == null) {
+            filteredBooks.setValue(new ArrayList<>());
+            return;
+        }
+
+        String q = currentSearchQuery != null ? currentSearchQuery.trim().toLowerCase() : "";
+        String genre = currentGenreFilter != null ? currentGenreFilter.trim() : "";
+
+        List<Book> result = new ArrayList<>();
+        for (Book b : source) {
+            if (b == null) continue;
+
+            boolean matchesQuery = true;
+            if (!q.isEmpty()) {
+                String title = b.getTitle() != null ? b.getTitle().toLowerCase() : "";
+                String author = b.getAuthor() != null ? b.getAuthor().toLowerCase() : "";
+                String isbn = b.getIsbn() != null ? b.getIsbn().toLowerCase() : "";
+                matchesQuery = title.contains(q) || author.contains(q) || isbn.contains(q);
+            }
+
+            boolean matchesGenre = true;
+            if (!genre.isEmpty()) {
+                String bookGenre = b.getGenre() != null ? b.getGenre().trim() : "";
+                matchesGenre = genre.equalsIgnoreCase(bookGenre);
+            }
+
+            if (matchesQuery && matchesGenre) {
+                result.add(b);
+            }
+        }
+
+        filteredBooks.setValue(result);
     }
 
     @Override

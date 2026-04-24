@@ -13,6 +13,7 @@ import com.librelibraria.data.service.AuditService;
 import com.librelibraria.data.service.AutomationService;
 import com.librelibraria.data.service.CatalogService;
 import com.librelibraria.data.service.DiaryService;
+import com.librelibraria.data.service.HybridLibraryService;
 import com.librelibraria.data.service.LendingService;
 import com.librelibraria.data.service.RatingService;
 import com.librelibraria.data.service.SettingsParityService;
@@ -47,6 +48,7 @@ public class LibreLibrariaApp extends Application {
     private SettingsParityService settingsParityService;
     private StatsService statsService;
     private AutomationService automationService;
+    private HybridLibraryService hybridLibraryService;
 
     @Override
     public void onCreate() {
@@ -69,6 +71,8 @@ public class LibreLibrariaApp extends Application {
         settingsParityService = new SettingsParityService(database.appSettingDao(), settingsRepository);
         statsService = new StatsService(database.bookDao(), database.loanDao(), database.borrowerDao());
         automationService = new AutomationService(bookRepository, loanRepository, auditService);
+        hybridLibraryService = new HybridLibraryService(database, bookRepository, loanRepository,
+                com.librelibraria.data.storage.FileStorageManager.getInstance(this));
 
         // Initialize API client
         apiClient = ApiService.createApiClient(settingsRepository.getServerUrl());
@@ -166,5 +170,9 @@ public class LibreLibrariaApp extends Application {
 
     public AutomationService getAutomationService() {
         return automationService;
+    }
+
+    public HybridLibraryService getHybridLibraryService() {
+        return hybridLibraryService;
     }
 }
