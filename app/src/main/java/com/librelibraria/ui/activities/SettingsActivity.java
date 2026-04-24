@@ -11,6 +11,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.app.AppCompatDelegate;
 import androidx.appcompat.widget.Toolbar;
 import androidx.appcompat.widget.SwitchCompat;
 import androidx.lifecycle.ViewModelProvider;
@@ -32,7 +33,11 @@ public class SettingsActivity extends AppCompatActivity {
     private LinearLayout llServerMode;
     private LinearLayout llAbout;
     private LinearLayout llClearData;
+    private LinearLayout llDarkMode;
+    private LinearLayout llThemeEditor;
+    private LinearLayout llAdvancedSettings;
     private SwitchCompat switchServerEnabled;
+    private SwitchCompat switchDarkMode;
     private TextView tvServerStatus;
     private TextView tvDatabaseUrl;
 
@@ -56,8 +61,12 @@ public class SettingsActivity extends AppCompatActivity {
         llServerMode = findViewById(R.id.ll_server_sync);
         llAbout = findViewById(R.id.ll_about);
         llClearData = findViewById(R.id.ll_refresh_status);
+        llDarkMode = findViewById(R.id.ll_dark_mode);
+        llThemeEditor = findViewById(R.id.ll_theme_editor);
+        llAdvancedSettings = findViewById(R.id.ll_advanced_settings);
 
         switchServerEnabled = findViewById(R.id.switch_sync_enabled);
+        switchDarkMode = findViewById(R.id.switch_dark_mode);
         tvServerStatus = findViewById(R.id.tv_server_url);
         tvDatabaseUrl = findViewById(R.id.tv_current_language);
     }
@@ -94,6 +103,10 @@ public class SettingsActivity extends AppCompatActivity {
                 tvServerStatus.setText(R.string.server_stopped);
             }
         });
+
+        // Load dark mode setting
+        LibreLibrariaApp app = (LibreLibrariaApp) getApplication();
+        switchDarkMode.setChecked(app.getSettingsRepository().isDarkMode());
     }
 
     private void setupListeners() {
@@ -103,8 +116,31 @@ public class SettingsActivity extends AppCompatActivity {
             viewModel.enableServerMode(isChecked);
         });
 
+        switchDarkMode.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            applyDarkMode(isChecked);
+        });
+
         llAbout.setOnClickListener(v -> showAboutDialog());
         llClearData.setOnClickListener(v -> showClearDataConfirmation());
+llThemeEditor.setOnClickListener(v -> openThemeEditor());
+        llAdvancedSettings.setOnClickListener(v -> openAdvancedSettings());
+    }
+
+    private void openAdvancedSettings() {
+        startActivity(new Intent(this, AdvancedSettingsActivity.class));
+    }
+
+    private void openThemeEditor() {
+        startActivity(new Intent(this, ThemeEditorActivity.class));
+    }
+
+    private void applyDarkMode(boolean darkMode) {
+        LibreLibrariaApp app = (LibreLibrariaApp) getApplication();
+        app.getSettingsRepository().setDarkMode(darkMode);
+
+        AppCompatDelegate.setDefaultNightMode(
+            darkMode ? AppCompatDelegate.MODE_NIGHT_YES : AppCompatDelegate.MODE_NIGHT_NO
+        );
     }
 
     private void showServerSettingsDialog() {

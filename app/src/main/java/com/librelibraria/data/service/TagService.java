@@ -1,59 +1,73 @@
 package com.librelibraria.data.service;
 
+import android.content.Context;
 import com.librelibraria.data.model.Book;
 import com.librelibraria.data.model.Tag;
-import com.librelibraria.data.repository.BookRepository;
-
-import java.util.List;
-
+import com.librelibraria.data.storage.FileStorageManager;
 import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Single;
 import io.reactivex.rxjava3.schedulers.Schedulers;
+import java.util.List;
 
 public class TagService {
 
-    private final BookRepository bookRepository;
-    private final AuditService auditService;
+    private final FileStorageManager storageManager;
+    private final Context context;
 
-    public TagService(BookRepository bookRepository, AuditService auditService) {
-        this.bookRepository = bookRepository;
-        this.auditService = auditService;
+    public TagService(Context context) {
+        this.context = context.getApplicationContext();
+        this.storageManager = FileStorageManager.getInstance(context);
     }
 
     public Single<List<Tag>> getAllTags() {
-        return bookRepository.getAllTags()
-                .firstOrError()
+        return Single.fromCallable(() -> storageManager.loadAllTags())
                 .subscribeOn(Schedulers.io());
     }
 
     public Single<Tag> getTagById(long tagId) {
-        return bookRepository.getTagById(tagId)
-                .subscribeOn(Schedulers.io());
+        return Single.fromCallable(() -> {
+            List<Tag> tags = storageManager.loadAllTags();
+            for (Tag tag : tags) {
+                if (tag.getId() == tagId) {
+                    return tag;
+                }
+            }
+            return null;
+        }).subscribeOn(Schedulers.io());
     }
 
-    /** Add a tag and return Completable (ignores generated ID). */
     public Completable addTag(Tag tag) {
-        return bookRepository.insertTag(tag)
-                .doOnSuccess(id -> auditService.log("TAG_ADDED", "Tag added: " + tag.getName()))
-                .ignoreElement()
+        return Completable.fromAction(() -> storageManager.saveTag(tag))
                 .subscribeOn(Schedulers.io());
     }
 
     public Completable updateTag(Tag tag) {
-        return bookRepository.updateTag(tag)
-                .doOnComplete(() -> auditService.log("TAG_UPDATED", "Tag updated: " + tag.getName()))
+        return Completable.fromAction(() -> storageManager.saveTag(tag))
                 .subscribeOn(Schedulers.io());
     }
 
     public Completable deleteTag(Tag tag) {
-        return bookRepository.deleteTag(tag)
-                .doOnComplete(() -> auditService.log("TAG_DELETED", "Tag deleted: " + tag.getName()))
-                .subscribeOn(Schedulers.io());
+        return Completable.fromAction(() -> {
+            if (tag.getId() > 0) {
+                java.io.File tagsDir = new java.io.File(storageManager.getBasePath(), "tags");
+                java.io.File tagFile = new java.io.File(tagsDir, "tag_" + tag.getId() + ".bct");
+                if (tagFile.exists()) {
+                    tagFile.delete();
+                }
+            }
+        }).subscribeOn(Schedulers.io());
     }
 
     public Single<List<Book>> getBooksForTag(long tagId) {
-        return bookRepository.getBooksByTag(tagId)
-                .firstOrError()
-                .subscribeOn(Schedulers.io());
+        return Single.fromCallable(() -> {
+            List<Book> allBooks = storageManager.loadAllBooks();
+            List<Book> tagged = new java.util.ArrayList<>();
+            for (Book b : allBooks) {
+                if (b.getTags() != null && b.getTags().contains("tag_" + tagId)) {
+                    tagged.add(b);
+                }
+            }
+            return tagged;
+        }).subscribeOn(Schedulers.io());
     }
 }

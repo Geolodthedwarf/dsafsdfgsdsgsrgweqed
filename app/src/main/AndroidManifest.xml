@@ -36,6 +36,17 @@
         android:usesCleartextTraffic="true"
         tools:targetApi="34">
 
+        <!-- Splash Activity -->
+        <activity
+            android:name=".ui.activities.SplashActivity"
+            android:exported="true"
+            android:theme="@style/Theme.LibreLibraria">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        
         <!-- Main Activity -->
         <activity
             android:name=".ui.activities.MainActivity"
@@ -46,6 +57,12 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        
+        <!-- Intro Activity -->
+        <activity
+            android:name=".ui.activities.IntroActivity"
+            android:exported="false"
+            android:theme="@style/Theme.LibreLibraria" />
 
         <!-- Book Detail Activity -->
         <activity
@@ -70,6 +87,18 @@
         <activity
             android:name=".ui.activities.SettingsActivity"
             android:parentActivityName=".ui.activities.MainActivity"
+            android:theme="@style/Theme.LibreLibraria" />
+
+        <!-- Theme Editor Activity -->
+        <activity
+            android:name=".ui.activities.ThemeEditorActivity"
+            android:parentActivityName=".ui.activities.SettingsActivity"
+            android:theme="@style/Theme.LibreLibraria" />
+
+        <!-- Advanced Settings Activity -->
+        <activity
+            android:name=".ui.activities.AdvancedSettingsActivity"
+            android:parentActivityName=".ui.activities.SettingsActivity"
             android:theme="@style/Theme.LibreLibraria" />
 
         <!-- Statistics Activity -->
@@ -102,6 +131,39 @@
             android:name=".service.LocalServerService"
             android:enabled="true"
             android:exported="false" />
+
+        <!-- Widget: Book Count -->
+        <receiver android:name=".widget.BookCountWidgetProvider"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_book_count_info" />
+        </receiver>
+
+        <!-- Widget: Currently Reading -->
+        <receiver android:name=".widget.CurrentlyReadingWidgetProvider"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_currently_reading_info" />
+        </receiver>
+
+        <!-- Widget: Reading Challenge -->
+        <receiver android:name=".widget.ReadingChallengeWidgetProvider"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_reading_challenge_info" />
+        </receiver>
 
     </application>
 

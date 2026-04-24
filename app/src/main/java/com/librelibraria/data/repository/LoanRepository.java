@@ -73,7 +73,9 @@ public class LoanRepository {
     }
 
     public Flowable<List<Loan>> getLoansForBorrower(long borrowerId) {
-        return loanDao.getLoansForBorrower(borrowerId).subscribeOn(Schedulers.io());
+        return loanDao.getLoansForBorrower(borrowerId)
+                .toFlowable()
+                .subscribeOn(Schedulers.io());
     }
 
     // --- Loan queries returning Single (for one-shot operations) ---
@@ -103,11 +105,13 @@ public class LoanRepository {
     }
 
     public Single<List<Loan>> getLoansForBorrowerOnce(long borrowerId) {
-        return loanDao.getLoansForBorrower(borrowerId).firstOrError().subscribeOn(Schedulers.io());
+        return loanDao.getLoansForBorrower(borrowerId).subscribeOn(Schedulers.io());
     }
 
     public Single<List<Loan>> getLoansForBookOnce(long bookId) {
-        return loanDao.getLoansForBook(bookId).firstOrError().subscribeOn(Schedulers.io());
+        return loanDao.getLoansForBook(bookId)
+                .firstOrError()
+                .subscribeOn(Schedulers.io());
     }
 
     // --- Counts ---

@@ -1,0 +1,287 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="eb62b510-3eb3-41fc-b2a7-14e3d6a332a7" name="Changes" comment="blab">
+      <change beforePath="$PROJECT_DIR$/../.idea/deploymentTargetSelector.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../.idea/deploymentTargetSelector.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../app/src/main/AndroidManifest.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../app/src/main/AndroidManifest.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../app/src/main/java/com/librelibraria/LibreLibrariaApp.java" beforeDir="false" afterPath="$PROJECT_DIR$/../app/src/main/java/com/librelibraria/LibreLibrariaApp.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../app/src/main/java/com/librelibraria/data/model/Book.java" beforeDir="false" afterPath="$PROJECT_DIR$/../app/src/main/java/com/librelibraria/data/model/Book.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../app/src/main/java/com/librelibraria/data/repository/LoanRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/../app/src/main/java/com/librelibraria/data/repository/LoanRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../app/src/main/java/com/librelibraria/data/service/AutomationService.java" beforeDir="false" afterPath="$PROJECT_DIR$/../app/src/main/java/com/librelibraria/data/service/AutomationService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../app/src/main/java/com/librelibraria/data/service/CatalogService.java" beforeDir="false" afterPath="$PROJECT_DIR$/../app/src/main/java/com/librelibraria/data/service/CatalogService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../app/src/main/java/com/librelibraria/data/service/DiaryService.java" beforeDir="false" afterPath="$PROJECT_DIR$/../app/src/main/java/com/librelibraria/data/service/DiaryService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../app/src/main/java/com/librelibraria/data/service/LendingService.java" beforeDir="false" afterPath="$PROJECT_DIR$/../app/src/main/java/com/librelibraria/data/service/LendingService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../app/src/main/java/com/librelibraria/data/service/StatsService.java" beforeDir="false" afterPath="$PROJECT_DIR$/../app/src/main/java/com/librelibraria/data/service/StatsService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../app/src/main/java/com/librelibraria/data/service/TagService.java" beforeDir="false" afterPath="$PROJECT_DIR$/../app/src/main/java/com/librelibraria/data/service/TagService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../app/src/main/java/com/librelibraria/data/sync/SyncManager.java" beforeDir="false" afterPath="$PROJECT_DIR$/../app/src/main/java/com/librelibraria/data/sync/SyncManager.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../app/src/main/java/com/librelibraria/ui/activities/AddEditBookActivity.java" beforeDir="false" afterPath="$PROJECT_DIR$/../app/src/main/java/com/librelibraria/ui/activities/AddEditBookActivity.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../app/src/main/java/com/librelibraria/ui/activities/MainActivity.java" beforeDir="false" afterPath="$PROJECT_DIR$/../app/src/main/java/com/librelibraria/ui/activities/MainActivity.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../app/src/main/java/com/librelibraria/ui/activities/SettingsActivity.java" beforeDir="false" afterPath="$PROJECT_DIR$/../app/src/main/java/com/librelibraria/ui/activities/SettingsActivity.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../app/src/main/java/com/librelibraria/ui/activities/StatisticsActivity.java" beforeDir="false" afterPath="$PROJECT_DIR$/../app/src/main/java/com/librelibraria/ui/activities/StatisticsActivity.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../app/src/main/java/com/librelibraria/ui/adapters/BookAdapter.java" beforeDir="false" afterPath="$PROJECT_DIR$/../app/src/main/java/com/librelibraria/ui/adapters/BookAdapter.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../app/src/main/java/com/librelibraria/ui/fragments/CatalogFragment.java" beforeDir="false" afterPath="$PROJECT_DIR$/../app/src/main/java/com/librelibraria/ui/fragments/CatalogFragment.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../app/src/main/java/com/librelibraria/ui/fragments/DashboardFragment.java" beforeDir="false" afterPath="$PROJECT_DIR$/../app/src/main/java/com/librelibraria/ui/fragments/DashboardFragment.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../app/src/main/java/com/librelibraria/ui/fragments/LendingFragment.java" beforeDir="false" afterPath="$PROJECT_DIR$/../app/src/main/java/com/librelibraria/ui/fragments/LendingFragment.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../app/src/main/java/com/librelibraria/ui/viewmodels/AddEditBookViewModel.java" beforeDir="false" afterPath="$PROJECT_DIR$/../app/src/main/java/com/librelibraria/ui/viewmodels/AddEditBookViewModel.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../app/src/main/java/com/librelibraria/ui/viewmodels/CatalogViewModel.java" beforeDir="false" afterPath="$PROJECT_DIR$/../app/src/main/java/com/librelibraria/ui/viewmodels/CatalogViewModel.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../app/src/main/java/com/librelibraria/ui/viewmodels/DashboardViewModel.java" beforeDir="false" afterPath="$PROJECT_DIR$/../app/src/main/java/com/librelibraria/ui/viewmodels/DashboardViewModel.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../app/src/main/java/com/librelibraria/ui/viewmodels/DiaryViewModel.java" beforeDir="false" afterPath="$PROJECT_DIR$/../app/src/main/java/com/librelibraria/ui/viewmodels/DiaryViewModel.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../app/src/main/java/com/librelibraria/ui/viewmodels/LendingViewModel.java" beforeDir="false" afterPath="$PROJECT_DIR$/../app/src/main/java/com/librelibraria/ui/viewmodels/LendingViewModel.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../app/src/main/res/drawable/ic_book.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../app/src/main/res/drawable/ic_book.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../app/src/main/res/drawable/ic_loan.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../app/src/main/res/drawable/ic_loan.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../app/src/main/res/layout/activity_book_detail.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../app/src/main/res/layout/activity_book_detail.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../app/src/main/res/layout/activity_settings.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../app/src/main/res/layout/activity_settings.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../app/src/main/res/layout/fragment_catalog.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../app/src/main/res/layout/fragment_catalog.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../app/src/main/res/layout/fragment_dashboard.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../app/src/main/res/layout/fragment_dashboard.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../app/src/main/res/menu/menu_bottom_navigation.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../app/src/main/res/menu/menu_bottom_navigation.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../app/src/main/res/values/colors.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../app/src/main/res/values/colors.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../app/src/main/res/values/strings.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../app/src/main/res/values/strings.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../app/src/main/res/values/themes.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../app/src/main/res/values/themes.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../gradlew" beforeDir="false" afterPath="$PROJECT_DIR$/../gradlew" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="ClangdSettings">
+    <option name="formatViaClangd" value="false" />
+  </component>
+  <component name="ExecutionTargetManager" SELECTED_TARGET="device_and_snapshot_combo_box_target[LocalEmulator::path=/home/azura/.android/avd/Pixel_9.avd]" />
+  <component name="ExternalProjectsData">
+    <projectState path="$PROJECT_DIR$">
+      <ProjectState />
+    </projectState>
+  </component>
+  <component name="ExternalProjectsManager">
+    <system id="GRADLE">
+      <state>
+        <projects_view>
+          <tree_state>
+            <expand>
+              <path>
+                <item name="" type="6a2764b6:ExternalProjectsStructure$RootNode" />
+                <item name="LibreLibraria" type="f1a62948:ProjectNode" />
+              </path>
+            </expand>
+            <select />
+          </tree_state>
+        </projects_view>
+      </state>
+    </system>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/.." />
+  </component>
+  <component name="GithubPullRequestsUISettings"><![CDATA[{
+  "selectedUrlAndAccountId": {
+    "url": "https://github.com/Geolodthedwarf/dsafsdfgsdsgsrgweqed.git",
+    "accountId": "2e995783-279e-4796-909c-28875ba80faa"
+  }
+}]]></component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "Android App.LibreLibraria.executor": "Run",
+    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
+    "git-widget-placeholder": "master",
+    "last_opened_file_path": "/home/azura/Downloads/LibreLibrariaApp",
+    "project.structure.last.edited": "Modules",
+    "project.structure.proportion": "0.17",
+    "project.structure.side.proportion": "0.2"
+  }
+}]]></component>
+  <component name="RunManager">
+    <configuration name="LibreLibraria" type="AndroidRunConfigurationType" factoryName="Android App" activateToolWindowBeforeRun="false">
+      <module name="LibreLibraria.app" />
+      <option name="ANDROID_RUN_CONFIGURATION_SCHEMA_VERSION" value="1" />
+      <option name="DEPLOY" value="true" />
+      <option name="DEPLOY_APK_FROM_BUNDLE" value="false" />
+      <option name="DEPLOY_AS_INSTANT" value="false" />
+      <option name="ARTIFACT_NAME" value="" />
+      <option name="PM_INSTALL_OPTIONS" value="" />
+      <option name="ALL_USERS" value="false" />
+      <option name="ALWAYS_INSTALL_WITH_PM" value="false" />
+      <option name="ALLOW_ASSUME_VERIFIED" value="false" />
+      <option name="CLEAR_APP_STORAGE" value="false" />
+      <option name="DYNAMIC_FEATURES_DISABLED_LIST" value="" />
+      <option name="ACTIVITY_EXTRA_FLAGS" value="" />
+      <option name="MODE" value="default_activity" />
+      <option name="RESTORE_ENABLED" value="false" />
+      <option name="RESTORE_FILE" value="" />
+      <option name="RESTORE_FRESH_INSTALL_ONLY" value="false" />
+      <option name="CLEAR_LOGCAT" value="false" />
+      <option name="SHOW_LOGCAT_AUTOMATICALLY" value="false" />
+      <option name="TARGET_SELECTION_MODE" value="DEVICE_AND_SNAPSHOT_COMBO_BOX" />
+      <option name="DEBUGGER_TYPE" value="Auto" />
+      <Auto>
+        <option name="USE_JAVA_AWARE_DEBUGGER" value="false" />
+        <option name="SHOW_STATIC_VARS" value="true" />
+        <option name="WORKING_DIR" value="" />
+        <option name="TARGET_LOGGING_CHANNELS" value="lldb process:gdb-remote packets" />
+        <option name="SHOW_OPTIMIZED_WARNING" value="true" />
+        <option name="ATTACH_ON_WAIT_FOR_DEBUGGER" value="false" />
+        <option name="DEBUG_SANDBOX_SDK" value="false" />
+      </Auto>
+      <Hybrid>
+        <option name="USE_JAVA_AWARE_DEBUGGER" value="false" />
+        <option name="SHOW_STATIC_VARS" value="true" />
+        <option name="WORKING_DIR" value="" />
+        <option name="TARGET_LOGGING_CHANNELS" value="lldb process:gdb-remote packets" />
+        <option name="SHOW_OPTIMIZED_WARNING" value="true" />
+        <option name="ATTACH_ON_WAIT_FOR_DEBUGGER" value="false" />
+        <option name="DEBUG_SANDBOX_SDK" value="false" />
+      </Hybrid>
+      <Java>
+        <option name="ATTACH_ON_WAIT_FOR_DEBUGGER" value="false" />
+        <option name="DEBUG_SANDBOX_SDK" value="false" />
+      </Java>
+      <Native>
+        <option name="USE_JAVA_AWARE_DEBUGGER" value="false" />
+        <option name="SHOW_STATIC_VARS" value="true" />
+        <option name="WORKING_DIR" value="" />
+        <option name="TARGET_LOGGING_CHANNELS" value="lldb process:gdb-remote packets" />
+        <option name="SHOW_OPTIMIZED_WARNING" value="true" />
+        <option name="ATTACH_ON_WAIT_FOR_DEBUGGER" value="false" />
+        <option name="DEBUG_SANDBOX_SDK" value="false" />
+      </Native>
+      <Profilers>
+        <option name="ADVANCED_PROFILING_ENABLED" value="false" />
+        <option name="STARTUP_PROFILING_ENABLED" value="false" />
+        <option name="STARTUP_CPU_PROFILING_ENABLED" value="false" />
+        <option name="STARTUP_CPU_PROFILING_CONFIGURATION_NAME" value="Java/Kotlin Method Sample (legacy)" />
+        <option name="STARTUP_NATIVE_MEMORY_PROFILING_ENABLED" value="false" />
+        <option name="NATIVE_MEMORY_SAMPLE_RATE_BYTES" value="2048" />
+      </Profilers>
+      <option name="DEEP_LINK" value="" />
+      <option name="ACTIVITY" value="" />
+      <option name="ACTIVITY_CLASS" value="" />
+      <option name="SEARCH_ACTIVITY_IN_GLOBAL_SCOPE" value="false" />
+      <option name="SKIP_ACTIVITY_VALIDATION" value="false" />
+      <method v="2">
+        <option name="Android.Gradle.BeforeRunTask" enabled="true" />
+      </method>
+    </configuration>
+    <configuration default="true" type="AndroidRunConfigurationType" factoryName="Android App" activateToolWindowBeforeRun="false">
+      <module name="LibreLibraria.app" />
+      <option name="ANDROID_RUN_CONFIGURATION_SCHEMA_VERSION" value="1" />
+      <option name="DEPLOY" value="true" />
+      <option name="DEPLOY_APK_FROM_BUNDLE" value="false" />
+      <option name="DEPLOY_AS_INSTANT" value="false" />
+      <option name="ARTIFACT_NAME" value="" />
+      <option name="PM_INSTALL_OPTIONS" value="" />
+      <option name="ALL_USERS" value="false" />
+      <option name="ALWAYS_INSTALL_WITH_PM" value="false" />
+      <option name="ALLOW_ASSUME_VERIFIED" value="false" />
+      <option name="CLEAR_APP_STORAGE" value="false" />
+      <option name="DYNAMIC_FEATURES_DISABLED_LIST" value="" />
+      <option name="ACTIVITY_EXTRA_FLAGS" value="" />
+      <option name="MODE" value="default_activity" />
+      <option name="RESTORE_ENABLED" value="false" />
+      <option name="RESTORE_FILE" value="" />
+      <option name="RESTORE_FRESH_INSTALL_ONLY" value="false" />
+      <option name="CLEAR_LOGCAT" value="false" />
+      <option name="SHOW_LOGCAT_AUTOMATICALLY" value="false" />
+      <option name="TARGET_SELECTION_MODE" value="DEVICE_AND_SNAPSHOT_COMBO_BOX" />
+      <option name="DEBUGGER_TYPE" value="Auto" />
+      <Auto>
+        <option name="USE_JAVA_AWARE_DEBUGGER" value="false" />
+        <option name="SHOW_STATIC_VARS" value="true" />
+        <option name="WORKING_DIR" value="" />
+        <option name="TARGET_LOGGING_CHANNELS" value="lldb process:gdb-remote packets" />
+        <option name="SHOW_OPTIMIZED_WARNING" value="true" />
+        <option name="ATTACH_ON_WAIT_FOR_DEBUGGER" value="false" />
+        <option name="DEBUG_SANDBOX_SDK" value="false" />
+      </Auto>
+      <Hybrid>
+        <option name="USE_JAVA_AWARE_DEBUGGER" value="false" />
+        <option name="SHOW_STATIC_VARS" value="true" />
+        <option name="WORKING_DIR" value="" />
+        <option name="TARGET_LOGGING_CHANNELS" value="lldb process:gdb-remote packets" />
+        <option name="SHOW_OPTIMIZED_WARNING" value="true" />
+        <option name="ATTACH_ON_WAIT_FOR_DEBUGGER" value="false" />
+        <option name="DEBUG_SANDBOX_SDK" value="false" />
+      </Hybrid>
+      <Java>
+        <option name="ATTACH_ON_WAIT_FOR_DEBUGGER" value="false" />
+        <option name="DEBUG_SANDBOX_SDK" value="false" />
+      </Java>
+      <Native>
+        <option name="USE_JAVA_AWARE_DEBUGGER" value="false" />
+        <option name="SHOW_STATIC_VARS" value="true" />
+        <option name="WORKING_DIR" value="" />
+        <option name="TARGET_LOGGING_CHANNELS" value="lldb process:gdb-remote packets" />
+        <option name="SHOW_OPTIMIZED_WARNING" value="true" />
+        <option name="ATTACH_ON_WAIT_FOR_DEBUGGER" value="false" />
+        <option name="DEBUG_SANDBOX_SDK" value="false" />
+      </Native>
+      <Profilers>
+        <option name="ADVANCED_PROFILING_ENABLED" value="false" />
+        <option name="STARTUP_PROFILING_ENABLED" value="false" />
+        <option name="STARTUP_CPU_PROFILING_ENABLED" value="false" />
+        <option name="STARTUP_CPU_PROFILING_CONFIGURATION_NAME" value="Java/Kotlin Method Sample (legacy)" />
+        <option name="STARTUP_NATIVE_MEMORY_PROFILING_ENABLED" value="false" />
+        <option name="NATIVE_MEMORY_SAMPLE_RATE_BYTES" value="2048" />
+      </Profilers>
+      <option name="DEEP_LINK" value="" />
+      <option name="ACTIVITY" value="" />
+      <option name="ACTIVITY_CLASS" value="" />
+      <option name="SEARCH_ACTIVITY_IN_GLOBAL_SCOPE" value="false" />
+      <option name="SKIP_ACTIVITY_VALIDATION" value="false" />
+      <method v="2">
+        <option name="Android.Gradle.BeforeRunTask" enabled="true" />
+      </method>
+    </configuration>
+  </component>
+  <component name="TaskManager">
+    <task id="LOCAL-00001" summary="bla">
+      <option name="closed" value="true" />
+      <created>1776982359695</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1776982359695</updated>
+    </task>
+    <task id="LOCAL-00002" summary="blab">
+      <option name="closed" value="true" />
+      <created>1776982703528</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1776982703528</updated>
+    </task>
+    <task id="LOCAL-00003" summary="blab">
+      <option name="closed" value="true" />
+      <created>1776983752440</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1776983752440</updated>
+    </task>
+    <option name="localTasksCounter" value="4" />
+    <servers />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="bla" />
+    <MESSAGE value="blab" />
+    <option name="LAST_COMMIT_MESSAGE" value="blab" />
+  </component>
+  <component name="play_dynamic_filters_status">
+    <option name="appIdToCheckInfo">
+      <map>
+        <entry key="com.librelibraria">
+          <value>
+            <CheckInfo lastCheckTimestamp="1776979791175" />
+          </value>
+        </entry>
+        <entry key="com.librelibraria.test">
+          <value>
+            <CheckInfo lastCheckTimestamp="1776979791179" />
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+</project>

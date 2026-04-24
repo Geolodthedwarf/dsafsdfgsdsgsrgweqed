@@ -13,6 +13,7 @@ import com.bumptech.glide.Glide;
 import com.google.android.material.chip.Chip;
 import com.librelibraria.R;
 import com.librelibraria.data.model.Book;
+import com.librelibraria.ui.util.AppAnimations;
 
 import java.util.List;
 
@@ -101,7 +102,10 @@ public class BookAdapter extends RecyclerView.Adapter<BookAdapter.BookViewHolder
             // Set click listener
             itemView.setOnClickListener(v -> {
                 if (listener != null) {
-                    listener.onBookClick(book);
+                    AppAnimations.cardPress(itemView);
+                    v.postDelayed(() -> {
+                        listener.onBookClick(book);
+                    }, 100);
                 }
             });
         }

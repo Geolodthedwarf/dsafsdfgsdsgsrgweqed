@@ -8,9 +8,6 @@ import com.librelibraria.data.database.Converters;
 
 import java.util.List;
 
-/**
- * Book entity representing a book in the library.
- */
 @Entity(tableName = "books")
 @TypeConverters(Converters.class)
 public class Book {
@@ -41,7 +38,7 @@ public class Book {
     private long lastModified;
     private boolean isSynced;
     private long localId;
-    private String status; // "AVAILABLE", "ON_LOAN", etc.
+    private String status;
 
     public Book() {
         this.dateAdded = System.currentTimeMillis();
@@ -54,7 +51,6 @@ public class Book {
         this.status = "AVAILABLE";
     }
 
-    // Getters and Setters
     public long getId() { return id; }
     public void setId(long id) { this.id = id; }
 
@@ -88,6 +84,10 @@ public class Book {
     public int getAvailableCopies() { return availableCopies; }
     public void setAvailableCopies(int availableCopies) { this.availableCopies = availableCopies; }
 
+    public boolean isAvailable() {
+        return availableCopies > 0 || "AVAILABLE".equals(status);
+    }
+
     public String getShelfLocation() { return shelfLocation; }
     public void setShelfLocation(String shelfLocation) { this.shelfLocation = shelfLocation; }
 
@@ -101,7 +101,7 @@ public class Book {
     public void setDateAdded(long dateAdded) { this.dateAdded = dateAdded; }
 
     public double getRating() { return rating; }
-    public void setRating(double rating) { this.rating = rating; }
+    public void setRating(double rating) { this.rating = Math.max(0, Math.min(5, rating)); }
 
     public String getReview() { return review; }
     public void setReview(String review) { this.review = review; }
@@ -130,10 +130,6 @@ public class Book {
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
 
-    public boolean isAvailable() {
-        return availableCopies > 0;
-    }
-
     public String getTagsAsList() {
         if (tags == null || tags.isEmpty()) return "";
         return tags;
@@ -142,6 +138,16 @@ public class Book {
     public String getRatingDisplay() {
         if (rating <= 0) return "";
         return String.format("%.1f/5", rating);
+    }
+
+    public String getRatingStars() {
+        if (rating <= 0) return "";
+        StringBuilder stars = new StringBuilder();
+        int fullStars = (int) rating;
+        float partial = (float) (rating - fullStars);
+        for (int i = 0; i < fullStars; i++) stars.append("★");
+        if (partial >= 0.25f) stars.append("☆");
+        return stars.toString() + " " + String.format("%.1f", rating);
     }
 
     @Override

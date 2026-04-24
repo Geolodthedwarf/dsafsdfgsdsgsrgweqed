@@ -11,8 +11,6 @@ import com.librelibraria.LibreLibrariaApp;
 import com.librelibraria.data.model.Book;
 import com.librelibraria.data.model.Borrower;
 import com.librelibraria.data.model.Loan;
-import com.librelibraria.data.repository.BookRepository;
-import com.librelibraria.data.repository.LoanRepository;
 import com.librelibraria.data.service.LendingService;
 
 import java.util.ArrayList;
@@ -27,8 +25,6 @@ import io.reactivex.rxjava3.schedulers.Schedulers;
  */
 public class LendingViewModel extends AndroidViewModel {
 
-    private final BookRepository bookRepository;
-    private final LoanRepository loanRepository;
     private final LendingService lendingService;
     private final CompositeDisposable disposables;
 
@@ -38,13 +34,12 @@ public class LendingViewModel extends AndroidViewModel {
     private final MutableLiveData<Integer> activeLoansCount = new MutableLiveData<>(0);
     private final MutableLiveData<Integer> overdueLoansCount = new MutableLiveData<>(0);
     private final MutableLiveData<Boolean> isLoading = new MutableLiveData<>(false);
+    private final MutableLiveData<String> errorMessage = new MutableLiveData<>();
 
     public LendingViewModel(@NonNull Application application) {
         super(application);
 
         LibreLibrariaApp app = (LibreLibrariaApp) application;
-        bookRepository = app.getBookRepository();
-        loanRepository = app.getLoanRepository();
         lendingService = app.getLendingService();
         disposables = new CompositeDisposable();
 
@@ -75,97 +70,158 @@ public class LendingViewModel extends AndroidViewModel {
         return isLoading;
     }
 
-    public void refresh() {
-        loadData();
+    public LiveData<String> getErrorMessage() {
+        return errorMessage;
     }
 
-    private void loadData() {
+    public void loadData() {
         isLoading.setValue(true);
 
-        // Load active loans
         disposables.add(
-            loanRepository.getActiveLoans()
+            lendingService.getAllLoans()
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(
                     loans -> {
-                        activeLoans.setValue(loans);
+                        List<Loan> active = new ArrayList<>();
+                        int overdue = 0;
+                        long now = System.currentTimeMillis();
+                        for (Loan loan : loans) {
+                            if (loan.getStatus() == com.librelibraria.data.model.LoanStatus.ACTIVE) {
+                                active.add(loan);
+                                if (loan.getDueDate() < now) {
+                                    overdue++;
+                                }
+                            }
+                        }
+                        activeLoans.setValue(active);
+                        activeLoansCount.setValue(active.size());
+                        overdueLoansCount.setValue(overdue);
                         isLoading.setValue(false);
                     },
-                    error -> isLoading.setValue(false)
-                )
-        );
-
-        // Load counts
-        disposables.add(
-            loanRepository.getActiveLoansCount()
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(
-                    count -> activeLoansCount.setValue(count),
-                    error -> {}
+                    error -> {
+                        errorMessage.setValue("Failed to load loans: " + error.getMessage());
+                        isLoading.setValue(false);
+                    }
                 )
         );
 
         disposables.add(
-            loanRepository.getOverdueLoansCount()
+            lendingService.getAllBorrowers()
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(
-                    count -> overdueLoansCount.setValue(count),
-                    error -> {}
-                )
-        );
-
-        // Load available books
-        disposables.add(
-            bookRepository.getAvailableBooks()
-                .firstOrError()
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(
-                    books -> availableBooks.setValue(books),
-                    error -> {}
-                )
-        );
-
-        // Load borrowers
-        disposables.add(
-            loanRepository.getAllBorrowers()
-                .firstOrError()
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(
-                    borrowerList -> borrowers.setValue(borrowerList),
-                    error -> {}
+                    borrowerList -> {
+                        borrowers.setValue(borrowerList);
+                    },
+                    error -> {
+                        errorMessage.setValue("Failed to load borrowers: " + error.getMessage());
+                    }
                 )
         );
     }
 
     public void lendBook(long bookId, Long borrowerId, String borrowerName, long dueDate) {
+        isLoading.setValue(true);
+
         disposables.add(
             lendingService.lendBook(bookId, borrowerId, borrowerName, dueDate)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(
-                    () -> refresh(),
-                    error -> {}
+                    id -> {
+                        isLoading.setValue(false);
+                        loadData();
+                    },
+                    error -> {
+                        errorMessage.setValue("Failed to lend book: " + error.getMessage());
+                        isLoading.setValue(false);
+                    }
                 )
         );
     }
 
-    public void returnBook(long loanId, String condition) {
+    public void returnBook(long loanId) {
+        isLoading.setValue(true);
+
         disposables.add(
             lendingService.returnBook(loanId)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(
-                    () -> refresh(),
-                    error -> {}
+                    () -> {
+                        isLoading.setValue(false);
+                        loadData();
+                    },
+                    error -> {
+                        errorMessage.setValue("Failed to return book: " + error.getMessage());
+                        isLoading.setValue(false);
+                    }
                 )
         );
     }
 
+    public void addBorrower(String name, String email, String phone) {
+        isLoading.setValue(true);
+
+        Borrower borrower = new Borrower();
+        borrower.setName(name);
+        borrower.setEmail(email);
+        borrower.setPhone(phone);
+
+        disposables.add(
+            lendingService.addBorrower(borrower)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(
+                    () -> {
+                        isLoading.setValue(false);
+                        loadData();
+                    },
+                    error -> {
+                        errorMessage.setValue("Failed to add borrower: " + error.getMessage());
+                        isLoading.setValue(false);
+                    }
+                )
+        );
+    }
+
+    public void deleteBorrower(Borrower borrower) {
+        disposables.add(
+            lendingService.deleteBorrower(borrower)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(
+                    () -> loadData(),
+                    error -> errorMessage.setValue("Failed to delete borrower")
+                )
+        );
+    }
+
+    public void refresh() {
+        loadData();
+    }
+
+    public void changeReturnBook(long loanId) {
+        isLoading.setValue(true);
+
+        disposables.add(
+            lendingService.returnBook(loanId)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(
+                    () -> {
+                        isLoading.setValue(false);
+                        loadData();
+                    },
+                    error -> {
+                        errorMessage.setValue("Failed to return book: " + error.getMessage());
+                        isLoading.setValue(false);
+                    }
+                )
+        );
+    }
+    
     @Override
     protected void onCleared() {
         super.onCleared();

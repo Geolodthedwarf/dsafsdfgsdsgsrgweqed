@@ -85,7 +85,7 @@
                         android:layout_marginTop="8dp"
                         android:isIndicator="true"
                         android:numStars="5"
-                        android:stepSize="0.5" />
+                        android:stepSize="0.1" />
 
                     <TextView
                         android:id="@+id/tv_reading_status"

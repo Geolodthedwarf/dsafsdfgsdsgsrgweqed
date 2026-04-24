@@ -1,135 +1,122 @@
 package com.librelibraria.data.service;
 
+import android.content.Context;
 import com.librelibraria.data.model.Book;
+import com.librelibraria.data.model.Borrower;
 import com.librelibraria.data.model.Loan;
 import com.librelibraria.data.model.LoanStatus;
-import com.librelibraria.data.repository.BookRepository;
-import com.librelibraria.data.repository.LoanRepository;
-
-import java.util.List;
-
+import com.librelibraria.data.storage.FileStorageManager;
 import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Single;
 import io.reactivex.rxjava3.schedulers.Schedulers;
+import java.io.File;
+import java.util.List;
 
 public class LendingService {
 
-    private final LoanRepository loanRepository;
-    private final BookRepository bookRepository;
-    private final AuditService auditService;
+    private final FileStorageManager storageManager;
+    private final Context context;
 
-    public LendingService(LoanRepository loanRepository, BookRepository bookRepository,
-                          AuditService auditService) {
-        this.loanRepository = loanRepository;
-        this.bookRepository = bookRepository;
-        this.auditService = auditService;
+    public LendingService(Context context) {
+        this.context = context.getApplicationContext();
+        this.storageManager = FileStorageManager.getInstance(context);
     }
 
-    /** Create a new loan from a fully constructed Loan object. */
-    public Single<Long> lendBook(Loan loan) {
-        return loanRepository.insert(loan)
-                .doOnSuccess(id -> {
-                    loan.setId(id);
-                    // Decrement available copies
-                    bookRepository.getBookById(loan.getBookId())
-                            .flatMapCompletable(book -> {
-                                int available = Math.max(0, book.getAvailableCopies() - 1);
-                                book.setAvailableCopies(available);
-                                return bookRepository.update(book);
-                            })
-                            .subscribeOn(Schedulers.io())
-                            .subscribe(() -> {}, e -> {});
-                    auditService.logLoanAction("LOAN_CREATED", "Book loaned to " + loan.getBorrowerName(), id);
+    public Single<List<Loan>> getAllLoans() {
+        return Single.fromCallable(() -> storageManager.loadAllLoans())
+                .subscribeOn(Schedulers.io());
+    }
+
+    public Single<List<Loan>> getActiveLoans() {
+        return getAllLoans()
+                .map(loans -> {
+                    List<Loan> active = new java.util.ArrayList<>();
+                    for (Loan loan : loans) {
+                        if (loan.getStatus() == LoanStatus.ACTIVE) {
+                            active.add(loan);
+                        }
+                    }
+                    return active;
                 });
     }
 
-    /** Create a new loan from individual parameters. */
+    public Single<Loan> getLoanById(long loanId) {
+        return Single.fromCallable(() -> {
+            List<Loan> loans = storageManager.loadAllLoans();
+            for (Loan loan : loans) {
+                if (loan.getId() == loanId) {
+                    return loan;
+                }
+            }
+            return null;
+        }).subscribeOn(Schedulers.io());
+    }
+
+    public Single<Long> lendBook(Loan loan) {
+        return Completable.fromAction(() -> {
+            loan.setStatus(LoanStatus.ACTIVE);
+            loan.setLoanDate(System.currentTimeMillis());
+            if (loan.getDueDate() == 0) {
+                loan.setDueDate(System.currentTimeMillis() + (14L * 24 * 60 * 60 * 1000));
+            }
+            storageManager.saveLoan(loan);
+        }).toSingleDefault(loan.getId()).subscribeOn(Schedulers.io());
+    }
+
     public Single<Long> lendBook(long bookId, Long borrowerId, String borrowerName, long dueDate) {
         Loan loan = new Loan();
         loan.setBookId(bookId);
         loan.setBorrowerId(borrowerId);
         loan.setBorrowerName(borrowerName);
-        loan.setLoanDate(System.currentTimeMillis());
-        loan.setDueDate(dueDate);
-        loan.setStatus(LoanStatus.ACTIVE);
+        loan.setDueDate(dueDate > 0 ? dueDate : System.currentTimeMillis() + (14L * 24 * 60 * 60 * 1000));
         return lendBook(loan);
     }
 
-    /** Mark a loan as returned and restore book availability. */
     public Completable returnBook(long loanId) {
-        return loanRepository.getLoanById(loanId)
-                .flatMapCompletable(loan -> {
+        return Completable.fromAction(() -> {
+            List<Loan> loans = storageManager.loadAllLoans();
+            for (Loan loan : loans) {
+                if (loan.getId() == loanId) {
                     loan.setStatus(LoanStatus.RETURNED);
                     loan.setReturnDate(System.currentTimeMillis());
-                    return loanRepository.update(loan)
-                            .andThen(
-                                    bookRepository.getBookById(loan.getBookId())
-                                            .flatMapCompletable(book -> {
-                                                book.setAvailableCopies(book.getAvailableCopies() + 1);
-                                                return bookRepository.update(book);
-                                            })
-                            )
-                            .doOnComplete(() ->
-                                    auditService.logLoanAction("LOAN_RETURNED", "Book returned", loanId));
-                });
+                    storageManager.saveLoan(loan);
+                    break;
+                }
+            }
+        }).subscribeOn(Schedulers.io());
     }
 
-    /** Renew (extend the due date of) an active loan. */
     public Completable renewLoan(long loanId, long newDueDate) {
-        return loanRepository.getLoanById(loanId)
-                .flatMapCompletable(loan -> {
+        return Completable.fromAction(() -> {
+            List<Loan> loans = storageManager.loadAllLoans();
+            for (Loan loan : loans) {
+                if (loan.getId() == loanId) {
                     loan.setDueDate(newDueDate);
                     loan.setRenewalCount(loan.getRenewalCount() + 1);
-                    return loanRepository.update(loan)
-                            .doOnComplete(() ->
-                                    auditService.logLoanAction("LOAN_RENEWED", "Loan renewed", loanId));
-                });
+                    storageManager.saveLoan(loan);
+                    break;
+                }
+            }
+        }).subscribeOn(Schedulers.io());
     }
 
-    public Single<List<Loan>> getActiveLoans() {
-        return loanRepository.getActiveLoansOnce();
+    public Single<List<Borrower>> getAllBorrowers() {
+        return Single.fromCallable(() -> storageManager.loadAllBorrowers())
+                .subscribeOn(Schedulers.io());
     }
 
-    public Single<List<Loan>> getReturnedLoans() {
-        return loanRepository.getReturnedLoans();
+    public Completable addBorrower(Borrower borrower) {
+        return Completable.fromAction(() -> storageManager.saveBorrower(borrower))
+                .subscribeOn(Schedulers.io());
     }
 
-    public Single<List<Loan>> getAllLoans() {
-        return loanRepository.getAllLoansOnce();
-    }
-
-    public Single<List<Loan>> getOverdueLoans() {
-        return loanRepository.getOverdueLoans(System.currentTimeMillis());
-    }
-
-    public Single<List<Loan>> getLoansDueSoon(int days) {
-        long futureDate = System.currentTimeMillis() + (days * 24L * 60 * 60 * 1000);
-        return loanRepository.getLoansDueBefore(futureDate);
-    }
-
-    public Single<List<Loan>> getLoansForBorrower(long borrowerId) {
-        return loanRepository.getLoansForBorrowerOnce(borrowerId);
-    }
-
-    public Single<List<Loan>> getLoansForBook(long bookId) {
-        return loanRepository.getLoansForBookOnce(bookId);
-    }
-
-    public Single<Loan> getLoanById(long loanId) {
-        return loanRepository.getLoanById(loanId);
-    }
-
-    public Single<Integer> getActiveLoansCount() {
-        return loanRepository.getActiveLoansCount();
-    }
-
-    public Single<Integer> getOverdueLoansCount() {
-        return loanRepository.getOverdueLoansCount();
-    }
-
-    public Completable deleteLoan(Loan loan) {
-        return loanRepository.delete(loan)
-                .doOnComplete(() ->
-                        auditService.logLoanAction("LOAN_DELETED", "Loan deleted", loan.getId()));
+    public Completable deleteBorrower(Borrower borrower) {
+        return Completable.fromAction(() -> {
+            if (borrower.getId() > 0) {
+                File dir = new File(storageManager.getBasePath(), "borrowers");
+                File file = new File(dir, "borrower_" + borrower.getId() + ".bcbr");
+                if (file.exists()) file.delete();
+            }
+        }).subscribeOn(Schedulers.io());
     }
 }

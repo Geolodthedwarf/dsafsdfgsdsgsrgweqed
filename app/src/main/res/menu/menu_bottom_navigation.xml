@@ -21,4 +21,9 @@
         android:icon="@drawable/ic_borrower"
         android:title="@string/borrowers" />
 
+    <item
+        android:id="@+id/nav_more"
+        android:icon="@drawable/ic_settings"
+        android:title="@string/settings" />
+
 </menu>

@@ -6,6 +6,7 @@ import com.librelibraria.data.database.BorrowerDao;
 import com.librelibraria.data.database.LoanDao;
 import com.librelibraria.data.model.Book;
 import com.librelibraria.data.model.Loan;
+import com.librelibraria.data.model.ReadingStatus;
 import com.librelibraria.data.model.Statistics;
 
 import java.util.HashMap;
@@ -22,13 +23,11 @@ public class StatsService {
     private final BookDao bookDao;
     private final LoanDao loanDao;
     private final BorrowerDao borrowerDao;
-    private final AuditLogDao auditLogDao;
 
-    public StatsService(BookDao bookDao, LoanDao loanDao, BorrowerDao borrowerDao, AuditLogDao auditLogDao) {
+    public StatsService(BookDao bookDao, LoanDao loanDao, BorrowerDao borrowerDao) {
         this.bookDao = bookDao;
         this.loanDao = loanDao;
         this.borrowerDao = borrowerDao;
-        this.auditLogDao = auditLogDao;
     }
 
     /**
@@ -66,11 +65,13 @@ public class StatsService {
      */
     public Single<Map<String, Integer>> getBooksByStatus() {
         return bookDao.getAllBooks()
+                .firstOrError()
                 .map(books -> {
                     Map<String, Integer> statusCount = new HashMap<>();
                     for (Book book : books) {
-                        String status = book.getReadingStatus() != null ? book.getReadingStatus() : "UNKNOWN";
-                        statusCount.put(status, statusCount.getOrDefault(status, 0) + 1);
+                        ReadingStatus status = book.getReadingStatus();
+                        String statusName = status != null ? status.name() : "UNKNOWN";
+                        statusCount.put(statusName, statusCount.getOrDefault(statusName, 0) + 1);
                     }
                     return statusCount;
                 })
@@ -127,6 +128,7 @@ public class StatsService {
      */
     public Single<java.util.List<java.util.Map<String, Object>>> getMostActiveBorrowers(int limit) {
         return borrowerDao.getAllBorrowers()
+                .firstOrError()
                 .map(borrowers -> {
                     java.util.List<java.util.Map<String, Object>> result = new java.util.ArrayList<>();
                     for (var borrower : borrowers) {
@@ -153,14 +155,17 @@ public class StatsService {
         long endDate = cal.getTimeInMillis();
 
         return Single.zip(
-                bookDao.getBooksAddedBetween(startDate, endDate).map(books -> books.size()).onErrorReturnItem(0),
-                loanDao.getLoansBetweenDates(startDate, endDate).map(loans -> loans.size()).onErrorReturnItem(0),
-                auditLogDao.getLogsBetweenDates(startDate, endDate).map(logs -> logs.size()).onErrorReturnItem(0),
-                (booksAdded, loansCreated, activities) -> {
+                bookDao.getBooksAddedBetween(startDate, endDate)
+                        .map(books -> books.size())
+                        .onErrorReturnItem(0),
+                loanDao.getLoansBetweenDates(startDate, endDate)
+                        .map(loans -> loans.size())
+                        .onErrorReturnItem(0),
+                (booksAdded, loansCreated) -> {
                     Map<String, Integer> monthly = new HashMap<>();
                     monthly.put("booksAdded", booksAdded);
                     monthly.put("loansCreated", loansCreated);
-                    monthly.put("activities", activities);
+                    monthly.put("activities", 0);
                     return monthly;
                 }
         ).subscribeOn(Schedulers.io());

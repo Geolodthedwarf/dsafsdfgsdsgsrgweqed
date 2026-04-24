@@ -11,6 +11,7 @@ import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -40,6 +41,7 @@ import java.util.List;
 public class AddEditBookActivity extends AppCompatActivity {
 
     public static final String EXTRA_BOOK_ID = "book_id";
+    public static final String EXTRA_SCAN_MODE = "scan_mode";
 
     private Toolbar toolbar;
     private TextInputEditText etTitle;
@@ -55,6 +57,7 @@ public class AddEditBookActivity extends AppCompatActivity {
     private ChipGroup chipGroupStatus;
     private ChipGroup chipGroupTags;
     private Button btnScanIsbn;
+    private Button btnAutofill;
     private View progressBar;
 
     private AddEditBookViewModel viewModel;
@@ -106,6 +109,7 @@ public class AddEditBookActivity extends AppCompatActivity {
         chipGroupStatus = findViewById(R.id.chip_group_status);
         chipGroupTags = findViewById(R.id.chip_group_tags);
         btnScanIsbn = findViewById(R.id.btn_scan_isbn);
+        btnAutofill = findViewById(R.id.btn_autofill);
         progressBar = findViewById(R.id.progress_bar);
 
         // Setup dropdown adapters
@@ -156,10 +160,34 @@ public class AddEditBookActivity extends AppCompatActivity {
                 finish();
             }
         });
+
+        viewModel.getLookupResult().observe(this, book -> {
+            if (book != null) {
+                populateForm(book);
+                Toast.makeText(this, R.string.book_found, Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        viewModel.getLookupError().observe(this, error -> {
+            if (error != null && !error.isEmpty()) {
+                Toast.makeText(this, error, Toast.LENGTH_LONG).show();
+            }
+        });
     }
 
     private void setupListeners() {
         btnScanIsbn.setOnClickListener(v -> scanBarcode());
+
+        if (btnAutofill != null) {
+            btnAutofill.setOnClickListener(v -> {
+                String isbn = etIsbn.getText() != null ? etIsbn.getText().toString().trim() : "";
+                if (isbn.isEmpty()) {
+                    Toast.makeText(this, R.string.enter_isbn, Toast.LENGTH_SHORT).show();
+                } else {
+                    viewModel.lookupIsbn(isbn);
+                }
+            });
+        }
 
         chipGroupStatus.setOnCheckedStateChangeListener((group, checkedIds) -> {
             if (!checkedIds.isEmpty()) {
@@ -173,8 +201,7 @@ public class AddEditBookActivity extends AppCompatActivity {
     }
 
     private void loadInitialData() {
-        viewModel.loadGenres();
-        viewModel.loadTags();
+        viewModel.loadGenresAndTags();
     }
 
     private void populateForm(Book book) {
@@ -270,7 +297,7 @@ public class AddEditBookActivity extends AppCompatActivity {
         }
 
         if (isEditMode) {
-            viewModel.updateBook(book);
+            viewModel.saveBook(book);
         } else {
             viewModel.saveBook(book);
         }

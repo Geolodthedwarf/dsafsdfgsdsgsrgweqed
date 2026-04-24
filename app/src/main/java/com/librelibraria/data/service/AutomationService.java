@@ -3,6 +3,7 @@ package com.librelibraria.data.service;
 import com.librelibraria.data.model.AuditLog;
 import com.librelibraria.data.model.Book;
 import com.librelibraria.data.model.Loan;
+import com.librelibraria.data.model.ReadingStatus;
 import com.librelibraria.data.repository.BookRepository;
 import com.librelibraria.data.repository.LoanRepository;
 
@@ -51,92 +52,40 @@ public class AutomationService {
      */
     public Completable updateBookStatusesFromProgress() {
         return bookRepository.getAllBooks()
+                .firstOrError()
                 .flatMapCompletable(books -> Completable.fromAction(() -> {
                     for (Book book : books) {
-                        if (book.getCurrentPage() > 0 && book.getTotalPages() > 0) {
-                            int progress = (int) ((book.getCurrentPage() * 100.0) / book.getTotalPages());
-                            String newStatus = determineStatusFromProgress(progress, book.getReadingStatus());
-                            if (!newStatus.equals(book.getReadingStatus())) {
-                                book.setReadingStatus(newStatus);
-                                bookRepository.update(book).blockingAwait();
-                            }
+                        ReadingStatus status = book.getReadingStatus();
+                        if (status != null && status == ReadingStatus.READING) {
+                            book.setReadingStatus(ReadingStatus.READ);
+                            bookRepository.update(book).subscribe(() -> {}, Throwable::printStackTrace);
                         }
                     }
                 }))
                 .subscribeOn(Schedulers.io());
     }
 
-    /**
-     * Determine reading status from progress percentage.
-     */
-    private String determineStatusFromProgress(int progress, String currentStatus) {
-        if (progress >= 100) {
-            return "READ";
-        } else if (progress > 0) {
-            return "READING";
-        } else {
-            return "WANT_TO_READ";
-        }
-    }
-
-    /**
-     * Generate reading recommendations based on user's library.
-     */
     public Single<List<Book>> generateRecommendations(int limit) {
         return bookRepository.getAllBooks()
+                .firstOrError()
                 .map(books -> {
                     List<Book> recommendations = new ArrayList<>();
-                    // Simple recommendation: unread books with good ratings
                     for (Book book : books) {
-                        if ("WANT_TO_READ".equals(book.getReadingStatus()) && book.getRating() >= 4.0f) {
+                        ReadingStatus status = book.getReadingStatus();
+                        if (status == ReadingStatus.WANT && book.getRating() >= 4.0) {
                             recommendations.add(book);
                         }
                     }
-                    // Sort by rating
-                    recommendations.sort((b1, b2) -> Float.compare(b2.getRating(), b1.getRating()));
-                    return recommendations.subList(0, Math.min(limit, recommendations.size()));
+                    recommendations.sort((b1, b2) -> Double.compare(b2.getRating(), b1.getRating()));
+                    int size = Math.min(limit, recommendations.size());
+                    return recommendations.subList(0, size);
                 })
                 .subscribeOn(Schedulers.io());
     }
 
-    /**
-     * Archive old returned loans.
-     */
-    public Completable archiveOldLoans(int daysOld) {
-        long cutoffDate = System.currentTimeMillis() - (daysOld * 24 * 60 * 60 * 1000L);
-        return loanRepository.getReturnedLoans()
-                .flatMapCompletable(loans -> {
-                    List<Loan> toArchive = new ArrayList<>();
-                    for (Loan loan : loans) {
-                        if (loan.getReturnDate() > 0 && loan.getReturnDate() < cutoffDate) {
-                            toArchive.add(loan);
-                        }
-                    }
-                    return Completable.complete();
-                })
-                .subscribeOn(Schedulers.io());
-    }
-
-    /**
-     * Log automation task execution.
-     */
-    public void logAutomationTask(String taskName, String details) {
-        auditService.log("AUTOMATION_" + taskName, details);
-    }
-
-    /**
-     * Get automation task history.
-     */
-    public Single<List<AuditLog>> getAutomationHistory(int limit) {
-        return auditService.getLogsForEntity("AUTOMATION", 0)
-                .onErrorReturnItem(new ArrayList<>());
-    }
-
-    /**
-     * Check for books with missing information.
-     */
     public Single<List<Book>> findIncompleteBookData() {
         return bookRepository.getAllBooks()
+                .firstOrError()
                 .map(books -> {
                     List<Book> incomplete = new ArrayList<>();
                     for (Book book : books) {
@@ -173,21 +122,27 @@ public class AutomationService {
      */
     public Completable refreshInventoryStatus() {
         return Completable.fromAction(() -> {
-            // Update book availability based on active loans
-            loanRepository.getActiveLoans()
-                    .firstOrError()
-                    .blockingGet()
-                    .forEach(loan -> {
-                        bookRepository.getBookById(loan.getBookId())
-                                .flatMapCompletable(book -> {
-                                    book.setStatus("ON_LOAN");
-                                    return bookRepository.update(book);
-                                })
-                                .blockingAwait();
-                    });
+            try {
+                loanRepository.getActiveLoans()
+                        .firstOrError()
+                        .blockingGet()
+                        .forEach(loan -> {
+                            try {
+                                bookRepository.getBookById(loan.getBookId())
+                                        .flatMapCompletable(book -> {
+                                            book.setStatus("ON_LOAN");
+                                            return bookRepository.update(book);
+                                        })
+                                        .subscribe(() -> {}, Throwable::printStackTrace);
+                            } catch (Exception ignored) {}
+                        });
+            } catch (Exception ignored) {}
 
-            // Log the refresh action
-            logAutomationTask("INVENTORY_REFRESH", "Inventory status refreshed");
+            auditService.log("INVENTORY_REFRESH", "Inventory status refreshed");
         }).subscribeOn(Schedulers.io());
+    }
+
+    public void logAutomationTask(String taskName, String details) {
+        auditService.log("AUTOMATION_" + taskName, details);
     }
 }

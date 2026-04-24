@@ -96,7 +96,9 @@ public class StatisticsActivity extends AppCompatActivity {
         pieChartStatus.setHoleColor(Color.WHITE);
         pieChartStatus.setHoleRadius(50f);
         pieChartStatus.setTransparentCircleRadius(55f);
-        pieChartStatus.setDrawEntryLabelsEnabled(false);
+        if (pieChartStatus.getData() != null) {
+            pieChartStatus.getData().setDrawValues(false);
+        }
         pieChartStatus.getLegend().setEnabled(true);
         pieChartStatus.getLegend().setWordWrapEnabled(true);
 

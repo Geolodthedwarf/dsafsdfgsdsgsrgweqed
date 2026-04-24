@@ -1,6 +1,7 @@
 package com.librelibraria.ui.viewmodels;
 
 import android.app.Application;
+import android.content.res.Resources;
 
 import androidx.annotation.NonNull;
 import androidx.lifecycle.AndroidViewModel;
@@ -8,12 +9,14 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
 import com.librelibraria.LibreLibrariaApp;
+import com.librelibraria.R;
 import com.librelibraria.data.model.Book;
 import com.librelibraria.data.model.Tag;
-import com.librelibraria.data.repository.BookRepository;
 import com.librelibraria.data.service.CatalogService;
+import com.librelibraria.data.service.TagService;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
@@ -25,23 +28,28 @@ import io.reactivex.rxjava3.schedulers.Schedulers;
  */
 public class AddEditBookViewModel extends AndroidViewModel {
 
-    private final BookRepository bookRepository;
     private final CatalogService catalogService;
+    private final TagService tagService;
     private final CompositeDisposable disposables;
 
     private final MutableLiveData<Book> book = new MutableLiveData<>();
-    private final MutableLiveData<List<String>> genres = new MutableLiveData<>(new ArrayList<>());
-    private final MutableLiveData<List<Tag>> tags = new MutableLiveData<>(new ArrayList<>());
+    private final MutableLiveData<List<String>> genres = new MutableLiveData<>();
+    private final MutableLiveData<List<Tag>> tags = new MutableLiveData<>();
     private final MutableLiveData<Boolean> isLoading = new MutableLiveData<>(false);
     private final MutableLiveData<Boolean> saveSuccess = new MutableLiveData<>();
+    private final MutableLiveData<String> errorMessage = new MutableLiveData<>();
+    private final MutableLiveData<Book> lookupResult = new MutableLiveData<>();
+    private final MutableLiveData<Boolean> isSearchEnabled = new MutableLiveData<>(false);
 
     public AddEditBookViewModel(@NonNull Application application) {
         super(application);
 
         LibreLibrariaApp app = (LibreLibrariaApp) application;
-        bookRepository = app.getBookRepository();
         catalogService = app.getCatalogService();
+        tagService = app.getTagService();
         disposables = new CompositeDisposable();
+
+        loadGenresAndTags();
     }
 
     public LiveData<Book> getBook() {
@@ -64,54 +72,73 @@ public class AddEditBookViewModel extends AndroidViewModel {
         return saveSuccess;
     }
 
+    public LiveData<String> getErrorMessage() {
+        return errorMessage;
+    }
+
+    public LiveData<Book> getLookupResult() {
+        return lookupResult;
+    }
+
+    public LiveData<Boolean> getIsSearchEnabled() {
+        return isSearchEnabled;
+    }
+
     public void loadBook(long bookId) {
         isLoading.setValue(true);
-
         disposables.add(
-            bookRepository.getBookById(bookId)
+            catalogService.getBookById(bookId)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(
-                    loadedBook -> {
-                        book.setValue(loadedBook);
+                    result -> {
                         isLoading.setValue(false);
+                        if (result != null) {
+                            book.setValue(result);
+                        } else {
+                            errorMessage.setValue("Book not found");
+                        }
                     },
                     error -> {
                         isLoading.setValue(false);
+                        errorMessage.setValue("Load failed: " + error.getMessage());
                     }
                 )
         );
     }
 
-    public void loadGenres() {
-        disposables.add(
-            bookRepository.getAllGenres()
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(
-                    genreList -> genres.setValue(genreList),
-                    error -> {}
-                )
-        );
+    public LiveData<String> getLookupError() {
+        return errorMessage;
     }
 
-    public void loadTags() {
+    public void loadGenresAndTags() {
+        try {
+            Resources resources = getApplication().getResources();
+            String[] genreArray = resources.getStringArray(R.array.genres);
+            genres.setValue(new ArrayList<>(Arrays.asList(genreArray)));
+        } catch (Exception e) {
+            genres.setValue(new ArrayList<>());
+        }
+
         disposables.add(
-            bookRepository.getAllTags()
+            tagService.getAllTags()
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(
                     tagList -> tags.setValue(tagList),
-                    error -> {}
+                    error -> tags.setValue(new ArrayList<>())
                 )
         );
     }
 
-    public void saveBook(Book newBook) {
-        isLoading.setValue(true);
+    public void setBook(Book bookToEdit) {
+        book.setValue(bookToEdit);
+    }
 
+    public void saveBook(Book bookToSave) {
+        isLoading.setValue(true);
         disposables.add(
-            catalogService.saveBook(newBook, false)
+            catalogService.saveBook(bookToSave, book.getValue() != null)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(
@@ -120,6 +147,7 @@ public class AddEditBookViewModel extends AndroidViewModel {
                         saveSuccess.setValue(true);
                     },
                     error -> {
+                        android.util.Log.e("AddEditBookVM", "Error saving book", error);
                         isLoading.setValue(false);
                         saveSuccess.setValue(false);
                     }
@@ -127,29 +155,93 @@ public class AddEditBookViewModel extends AndroidViewModel {
         );
     }
 
-    public void updateBook(Book updatedBook) {
-        isLoading.setValue(true);
+    public void searchByIsbn(String isbn) {
+        if (isbn == null || isbn.isEmpty()) {
+            errorMessage.setValue("ISBN cannot be empty");
+            return;
+        }
 
+        isLoading.setValue(true);
         disposables.add(
-            catalogService.saveBook(updatedBook, true)
+            catalogService.searchByIsbn(isbn)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(
-                    () -> {
+                    result -> {
+                        if (result != null && result.getTitle() != null && !result.getTitle().isEmpty()) {
+                            lookupResult.setValue(result);
+                            isLoading.setValue(false);
+                        } else {
+                            catalogService.searchOnlineByIsbn(isbn)
+                                .observeOn(AndroidSchedulers.mainThread())
+                                .subscribe(
+                                    onlineResult -> {
+                                        isLoading.setValue(false);
+                                        if (onlineResult != null && onlineResult.getTitle() != null) {
+                                            lookupResult.setValue(onlineResult);
+                                        } else {
+                                            errorMessage.setValue("Book not found");
+                                        }
+                                    },
+                                    error -> {
+                                        isLoading.setValue(false);
+                                        errorMessage.setValue("Book not found");
+                                    }
+                                );
+                        }
+                    },
+                    error -> {
+                        catalogService.searchOnlineByIsbn(isbn)
+                            .observeOn(AndroidSchedulers.mainThread())
+                            .subscribe(
+                                onlineResult -> {
+                                    isLoading.setValue(false);
+                                    if (onlineResult != null && onlineResult.getTitle() != null) {
+                                        lookupResult.setValue(onlineResult);
+                                    } else {
+                                        errorMessage.setValue("Book not found");
+                                    }
+                                },
+                                error2 -> {
+                                    isLoading.setValue(false);
+                                    errorMessage.setValue("Book not found");
+                                }
+                            );
+                    }
+                )
+        );
+    }
+
+    public void searchByTitle(String title) {
+        if (title == null || title.isEmpty()) {
+            errorMessage.setValue("Title cannot be empty");
+            return;
+        }
+
+        isLoading.setValue(true);
+        disposables.add(
+            catalogService.searchByTitle(title)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(
+                    result -> {
                         isLoading.setValue(false);
-                        saveSuccess.setValue(true);
+                        if (result != null) {
+                            lookupResult.setValue(result);
+                        } else {
+                            errorMessage.setValue("Book not found");
+                        }
                     },
                     error -> {
                         isLoading.setValue(false);
-                        saveSuccess.setValue(false);
+                        errorMessage.setValue("Search failed: " + error.getMessage());
                     }
                 )
         );
     }
 
     public void lookupIsbn(String isbn) {
-        // TODO: Implement Open Library API lookup
-        // For now, this is a placeholder
+        searchByIsbn(isbn);
     }
 
     @Override

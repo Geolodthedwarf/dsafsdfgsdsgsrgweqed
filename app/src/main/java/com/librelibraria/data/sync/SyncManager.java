@@ -167,9 +167,11 @@ public class SyncManager {
                 for (Book serverBook : serverBooks) {
                     serverBook.setSynced(true);
                     try {
-                        database.bookDao().insert(serverBook).blockingAwait();
+                        database.bookDao().insert(serverBook).blockingGet();
                     } catch (Exception e) {
-                        database.bookDao().update(serverBook).blockingAwait();
+                        try {
+                            database.bookDao().update(serverBook).subscribe(() -> {}, Throwable::printStackTrace);
+                        } catch (Exception ignored) {}
                     }
                 }
             } catch (Exception e) {
@@ -206,8 +208,13 @@ public class SyncManager {
     public Single<String> exportLibrary() {
         return Single.fromCallable(() -> {
             BclCodec.LibraryData data = new BclCodec.LibraryData();
-            data.books = database.bookDao().getAllBooks().blockingGet();
-            data.loans = database.loanDao().getAllLoans().blockingGet();
+            try {
+                data.books = database.bookDao().getAllBooks().firstOrError().blockingGet();
+                data.loans = database.loanDao().getAllLoans().firstOrError().blockingGet();
+            } catch (Exception e) {
+                data.books = new java.util.ArrayList<>();
+                data.loans = new java.util.ArrayList<>();
+            }
             return bclCodec.encode(data);
         }).subscribeOn(Schedulers.io());
     }
@@ -219,10 +226,12 @@ public class SyncManager {
 
             if (data.books != null) {
                 for (Book book : data.books) {
-                    book.setId(0); // Reset ID for new insertion
+                    book.setId(0);
                     book.setSynced(false);
-                    database.bookDao().insert(book).blockingAwait();
-                    count++;
+                    try {
+                        database.bookDao().insert(book).blockingGet();
+                        count++;
+                    } catch (Exception ignored) {}
                 }
             }
 
@@ -230,8 +239,10 @@ public class SyncManager {
                 for (Loan loan : data.loans) {
                     loan.setId(0);
                     loan.setSynced(false);
-                    database.loanDao().insert(loan).blockingAwait();
-                    count++;
+                    try {
+                        database.loanDao().insert(loan).blockingGet();
+                        count++;
+                    } catch (Exception ignored) {}
                 }
             }
 

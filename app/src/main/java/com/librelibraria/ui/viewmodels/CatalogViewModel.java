@@ -75,6 +75,11 @@ public class CatalogViewModel extends AndroidViewModel {
         applyFilters();
     }
 
+    public void filterByStatus(String status) {
+        currentGenreFilter = status != null ? status : "";
+        applyFilters();
+    }
+
     private void loadBooks() {
         isLoading.setValue(true);
 

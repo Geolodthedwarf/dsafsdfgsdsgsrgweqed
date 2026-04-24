@@ -87,7 +87,7 @@ public class DiaryViewModel extends AndroidViewModel {
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(
-                        () -> loadEntries(),
+                        id -> loadEntries(),
                         throwable -> errorMessage.setValue("Failed to add entry: " + throwable.getMessage())
                 ));
     }

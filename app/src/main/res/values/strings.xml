@@ -1,6 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">LibreLibraria</string>
+    <string name="app_tagline">Your Personal Library Manager</string>
+    
+    <!-- Widgets -->
+    <string name="widget_book_count_desc">Shows total number of books in your library</string>
+    <string name="widget_currently_reading_desc">Shows the book you\'re currently reading</string>
+    <string name="widget_reading_challenge_desc">Shows your yearly reading challenge progress</string>
     
     <!-- Navigation -->
     <string name="dashboard">Dashboard</string>
@@ -22,7 +28,9 @@
     <string name="total_borrowers">Total Borrowers</string>
     <string name="overdue_items">Overdue</string>
     <string name="recent_activity">Recent Activity</string>
+    <string name="recent_books">Recent Books</string>
     <string name="quick_actions">Quick Actions</string>
+    <string name="action">Action</string>
     <string name="add_book">Add Book</string>
     <string name="new_loan">New Loan</string>
     <string name="add_borrower">Add Borrower</string>
@@ -61,6 +69,75 @@
     <string name="publisher">Publisher</string>
     <string name="year">Year</string>
     <string name="genre">Genre</string>
+    <string-array name="genres">
+        <item>Fiction</item>
+        <item>Non-Fiction</item>
+        <item>Mystery</item>
+        <item>Thriller</item>
+        <item>Romance</item>
+        <item>Science Fiction</item>
+        <item>Fantasy</item>
+        <item>Horror</item>
+        <item>Biography</item>
+        <item>History</item>
+        <item>Science</item>
+        <item>Technology</item>
+        <item>Self-Help</item>
+        <item>Business</item>
+        <item>Children</item>
+        <item>Young Adult</item>
+        <item>Poetry</item>
+        <item>Drama</item>
+        <item>Comics</item>
+        <item>Art</item>
+        <item>Religion</item>
+        <item>Philosophy</item>
+        <item>Psychology</item>
+        <item>Cooking</item>
+        <item>Travel</item>
+        <item>Sports</item>
+        <item>Music</item>
+        <item>Reference</item>
+        <item>Textbook</item>
+        <item>Encyclopedia</item>
+        <item>Dictionary</item>
+        <item>Atlas</item>
+        <item>Academic Paper</item>
+        <item>Technical Manual</item>
+        <item>Legal</item>
+        <item>Finance</item>
+        <item>Health</item>
+        <item>Medicine</item>
+        <item>Physics</item>
+        <item>Chemistry</item>
+        <item>Biology</item>
+        <item>Mathematics</item>
+        <item>Computer Science</item>
+        <item>Engineering</item>
+        <item>Agriculture</item>
+        <item>Law</item>
+        <item>Political Science</item>
+        <item>Sociology</item>
+        <item>Economics</item>
+        <item>Linguistics</item>
+        <item>Anthology</item>
+        <item>Classic Literature</item>
+        <item>Short Stories</item>
+        <item>Essays</item>
+        <item>Memoir</item>
+        <item>Self-Help</item>
+        <item>How-To</item>
+        <item>Guide</item>
+        <item>Catalogue</item>
+        <item>Periodical</item>
+        <item>Newsletter</item>
+        <item>Journal</item>
+        <item>Magazine</item>
+        <item>Newspaper</item>
+        <item>Archive</item>
+        <item>Manuscript</item>
+        <item>Other</item>
+    </string-array>
     <string name="category">Category</string>
     <string name="quantity">Quantity</string>
     <string name="description">Description</string>
@@ -169,9 +246,14 @@
     <string name="ok">OK</string>
     <string name="error">Error</string>
     <string name="error_rating_required">Please select a rating</string>
+    <string name="rating">Rating</string>
+    <string name="review">Review</string>
+    <string name="book_condition">Book Condition</string>
+    <string name="due_return_date">Return Due Date</string>
     <string name="synced_count">Synced %1$d items</string>
     <string name="sync_error">Sync error</string>
     <string name="stop">Stop</string>
+    <string name="start">Start</string>
     <string name="channel_sync_name">Library sync</string>
     <string name="channel_sync_description">Background synchronization notifications</string>
     <string name="channel_server_name">Local server</string>
@@ -210,7 +292,6 @@
     <string name="no_tags">No tags</string>
     <string name="no_tags_message">Create tags to organize your library</string>
 
-    <!-- Statistics -->
     <string name="reading">Reading</string>
     <string name="read">Read</string>
     <string name="own">Own</string>
@@ -220,5 +301,95 @@
     <string name="no_data">No data available</string>
     <string name="books_added">Books Added</string>
     <string name="loans">Loans</string>
+    <string name="autofill">Autofill</string>
+    <string name="book_found">Book found! Fields populated.</string>
+    <string name="enter_isbn">Please enter an ISBN</string>
+    <string name="scan">Scan</string>
+    <string name="shelf_location">Shelf Location</string>
+    <string name="copies">Copies</string>
+    <string name="appearance">Appearance</string>
+    <string name="dark_mode">Dark Mode</string>
+    <string name="dark_mode_description">Enable dark theme for the app</string>
+    <string name="quick_lend">Quick Lend</string>
+    <string name="scan_isbn">Scan ISBN</string>
+    <string name="select_due_date">Select due date</string>
+    <string name="your_rating">Your Rating</string>
+    <string name="write_review">Write a review (optional)</string>
+<string name="rate_book">Rate Book</string>
+    <string name="page_number">Page number</string>
+    <string name="navigation">Navigation</string>
+    <string name="late_fee">Late Fee</string>
+    <string name="good">Good</string>
+    <string name="damaged">Damaged</string>
+    <string name="select_theme">Theme</string>
+    <string name="color_theme">Color Theme</string>
+    <string name="follow_system">Follow System</string>
+    <string name="light">Light</string>
+    <string name="display_mode">Display Mode</string>
+    <string name="next">Next</string>
+    <string name="skip">Skip</string>
+    <string name="finish">Finish</string>
+    <string name="setup_library">Setup Your Library</string>
+    <string name="library_name">Library Name</string>
+    <string name="create">Create</string>
+    <string name="import_from_file">Import Existing Data</string>
+    <string name="import_bcl_description">Import from .bcl file exported from other devices</string>
+    <string name="select_file">Select File</string>
+    <string name="welcome_title">Welcome to Libre Libraria</string>
+    <string name="welcome_desc">Your personal library management app for managing books, lending, and more.</string>
+    <string name="catalog_title">Book Catalog</string>
+    <string name="catalog_desc">Organize your book collection with detailed catalog, search, and filtering capabilities.</string>
+    <string name="lending_title">Lending Management</string>
+    <string name="lending_desc">Track loans, manage borrowers, and handle book returns with ease.</string>
+    <string name="import_title">Import Data</string>
+    <string name="import_desc">Import your existing library data from .bcl files exported from other devices.</string>
+    <string name="theme_title">Customize Theme</string>
+    <string name="theme_desc">Choose your preferred color theme and display mode in settings.</string>
+    <string name="folder_selected">Library folder selected</string>
+    <string name="error_creating_folders">Error creating library folders</string>
+    <string name="theme_editor">Theme Editor</string>
+    <string name="customize_colors">Customize Colors</string>
+    <string name="theme_editor_description">Create and edit custom color themes</string>
+    <string name="theme_name">Theme Name</string>
+    <string name="save_theme">Save Theme</string>
+    <string name="primary_color">Primary Color</string>
+    <string name="secondary_color">Secondary Color</string>
+    <string name="tertiary_color">Tertiary Color</string>
+    <string name="background_color">Background Color</string>
+    <string name="surface_color">Surface Color</string>
+    <string name="preview">Preview</string>
+    <string name="apply_theme">Apply Theme</string>
+    <string name="delete_theme">Delete Theme</string>
+    <string name="theme_saved">Theme saved successfully</string>
+    <string name="theme_deleted">Theme deleted</string>
+    <string name="advanced_settings">Advanced</string>
+    <string name="advanced_settings_description">CSS theme editor and more</string>
+    <string name="advanced_css_theme">CSS Theme Editor</string>
+    <string name="css_theme_description">Edit CSS custom properties for theme colors</string>
+    <string name="current_css">Current CSS</string>
+    <string name="quick_presets">Quick Presets</string>
+    <string name="theme_variables">Theme Variables</string>
+    <string name="theme_variables_description">Available CSS custom properties</string>
+    <string name="css_variables_list">--color-primary&#10;--color-primary-container&#10;--color-on-primary&#10;--color-secondary&#10;--color-secondary-container&#10;--color-tertiary&#10;--color-background&#10;--color-surface&#10;--color-surface-variant&#10;--color-on-surface&#10;--color-on-surface-variant&#10;--color-error&#10;--color-outline</string>
+    <string name="save_css">Save CSS Theme</string>
+    <string name="export_css">Export to CSS File</string>
+    <string name="reading_challenge">Reading Challenge</string>
+    <string name="challenge_title">Challenge Title</string>
+    <string name="goal_books">Books Goal</string>
+    <string name="goal_pages">Pages Goal</string>
+    <string name="challenge_duration">Duration</string>
+    <string name="one_month">1 Month</string>
+    <string name="three_months">3 Months</string>
+    <string name="one_year">1 Year</string>
+    <string name="start_challenge">Start Challenge</string>
+    <string name="challenge_progress">Progress: %d%%</string>
+    <string name="books_read">%d of %d books</string>
+    <string name="challenge_completed">Challenge Completed!</string>
+    <string name="active_challenge">Active Challenge</string>
+    <string name="no_active_challenge">No active challenge</string>
+    <string name="reading_streak">Reading Streak</string>
+    <string name="day_streak">%d Day Streak!</string>
+    <string name="best_streak">Best: %d days</string>
+    <string name="overdue_books">Overdue Books</string>
 
 </resources>

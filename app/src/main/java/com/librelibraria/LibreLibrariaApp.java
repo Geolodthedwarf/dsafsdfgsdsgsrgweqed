@@ -61,13 +61,13 @@ public class LibreLibrariaApp extends Application {
         loanRepository = new LoanRepository(database.loanDao(), database.borrowerDao());
         settingsRepository = new SettingsRepository(this);
         auditService = new AuditService(database.auditLogDao());
-        catalogService = new CatalogService(bookRepository, auditService);
-        lendingService = new LendingService(loanRepository, bookRepository, auditService);
+        catalogService = new CatalogService(this);
+        lendingService = new LendingService(this);
         ratingService = new RatingService(bookRepository, auditService);
         diaryService = new DiaryService(database.diaryDao(), auditService);
-        tagService = new TagService(bookRepository, auditService);
+        tagService = new TagService(this);
         settingsParityService = new SettingsParityService(database.appSettingDao(), settingsRepository);
-        statsService = new StatsService(database.bookDao(), database.loanDao(), database.borrowerDao(), database.auditLogDao());
+        statsService = new StatsService(database.bookDao(), database.loanDao(), database.borrowerDao());
         automationService = new AutomationService(bookRepository, loanRepository, auditService);
 
         // Initialize API client

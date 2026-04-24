@@ -8,10 +8,12 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
 import com.librelibraria.LibreLibrariaApp;
+import com.librelibraria.data.model.AuditLog;
 import com.librelibraria.data.model.Book;
 import com.librelibraria.data.model.Statistics;
 import com.librelibraria.data.repository.BookRepository;
 import com.librelibraria.data.repository.LoanRepository;
+import com.librelibraria.data.service.AuditService;
 import com.librelibraria.data.service.StatsService;
 
 import java.util.List;
@@ -27,10 +29,12 @@ public class DashboardViewModel extends AndroidViewModel {
 
     private final BookRepository bookRepository;
     private final StatsService statsService;
+    private final AuditService auditService;
     private final CompositeDisposable disposables;
 
     private final MutableLiveData<Statistics> statistics = new MutableLiveData<>();
     private final MutableLiveData<List<Book>> recentBooks = new MutableLiveData<>();
+    private final MutableLiveData<List<AuditLog>> recentActivity = new MutableLiveData<>();
     private final MutableLiveData<Boolean> isLoading = new MutableLiveData<>(false);
 
     public DashboardViewModel(@NonNull Application application) {
@@ -39,6 +43,7 @@ public class DashboardViewModel extends AndroidViewModel {
         LibreLibrariaApp app = (LibreLibrariaApp) application;
         bookRepository = app.getBookRepository();
         statsService = app.getStatsService();
+        auditService = app.getAuditService();
         disposables = new CompositeDisposable();
 
         loadData();
@@ -50,6 +55,10 @@ public class DashboardViewModel extends AndroidViewModel {
 
     public LiveData<List<Book>> getRecentBooks() {
         return recentBooks;
+    }
+
+    public LiveData<List<AuditLog>> getRecentActivity() {
+        return recentActivity;
     }
 
     public LiveData<Boolean> getIsLoading() {
@@ -87,6 +96,17 @@ public class DashboardViewModel extends AndroidViewModel {
                 .subscribe(
                     books -> recentBooks.setValue(books),
                     error -> recentBooks.setValue(null)
+                )
+        );
+
+        // Load recent activity
+        disposables.add(
+            auditService.getRecentLogs(10)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(
+                    logs -> recentActivity.setValue(logs),
+                    error -> recentActivity.setValue(null)
                 )
         );
     }
